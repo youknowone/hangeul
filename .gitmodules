@@ -1,0 +1,3 @@
+[submodule "cdebug"]
+	path = cdebug
+	url = https://github.com/youknowone/cdebug.git
