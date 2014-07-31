@@ -65,6 +65,12 @@ namespace hangeul { namespace KSX5002 {
         virtual UnicodeVector decode(State state);
     };
 
+    class Layout {
+    public:
+        Annotation translate(KeyStroke stroke, StateList states);
+        Unicode label(Annotation annotation);
+    };
+
     //! state[2]->state[0, 'a', 'b', 'c']
     class KeyStrokeToAnnotationPhase: public AnnotationPhase {
     public:

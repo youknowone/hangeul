@@ -39,9 +39,7 @@ namespace hangeul {
             return unicodes;
         }
 
-        PhaseResult KeyStrokeToAnnotationPhase::put(StateList states) {
-            #define DDD 0
-
+        Annotation Layout::translate(KeyStroke stroke, StateList states) {
             #define A(C) { AnnotationClass::ASCII, C }
             #define F(C) { AnnotationClass::Function, KeyPosition ## C }
             #define C(C) { AnnotationClass::Consonant, Consonant:: C }
@@ -69,8 +67,6 @@ namespace hangeul {
             #undef C
             #undef V
 
-            auto& state = states.front();
-            auto stroke = state[2];
             auto masked = stroke & 0xff;
             Annotation annotation;
             if (stroke & 0x20000) {
@@ -78,6 +74,34 @@ namespace hangeul {
             } else {
                 annotation = map1[masked];
             }
+            return annotation;
+        }
+
+        Unicode Layout::label(Annotation annotation) {
+            switch (annotation.type) {
+                case AnnotationClass::Consonant:
+                    return 0x3131 + annotation.data - 1;
+                case AnnotationClass::Vowel:
+                    return 0x314f + annotation.data - 1;
+                case AnnotationClass::ASCII:
+                    return annotation.data;
+                case AnnotationClass::Function:
+                    return 'X';
+                default:
+                    assert(false);
+                    break;
+            }
+            return 0;
+        }
+
+        PhaseResult KeyStrokeToAnnotationPhase::put(StateList states) {
+            #define DDD 0
+            static Layout layout;
+
+            auto& state = states.front();
+            auto stroke = state[2];
+            auto annotation = layout.translate(stroke, states);
+
             switch (annotation.type) {
                 case AnnotationClass::Consonant:
                     state['a'] = annotation.data;

@@ -18,6 +18,7 @@ namespace hangeul {
     typedef uint32_t InputSource;
     typedef uint32_t Unicode;
     typedef std::vector<Unicode> UnicodeVector;
+    typedef uint32_t KeyStroke;
 
     class State: public std::map<int32_t, int32_t> {
     public:
