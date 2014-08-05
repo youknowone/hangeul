@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3830366719904FA600C1EE0C /* capi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3830366519904FA600C1EE0C /* capi.cpp */; };
 		38317F3F19681DBF00D68031 /* ksx5002.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38317F3D19681DBF00D68031 /* ksx5002.cpp */; };
 		38317F4219685A3800D68031 /* utf8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38317F4019685A3800D68031 /* utf8.cpp */; };
 		3855212E19455AD200716ABA /* decoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3855212D19455AD200716ABA /* decoder.cpp */; };
-		386CD9DC1951891400700620 /* hangul.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C6A0ED1944FA850061CC7C /* hangul.cpp */; };
 		38904F4F1942C02200858B09 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38904F4E1942C02200858B09 /* Foundation.framework */; };
 		38904F541942C02200858B09 /* hangeul.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 38904F531942C02200858B09 /* hangeul.h */; };
 		38904F5D1942C02200858B09 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 38904F5C1942C02200858B09 /* XCTest.framework */; };
@@ -50,12 +50,16 @@
 /* Begin PBXFileReference section */
 		3804C746197DA80200C7E6ED /* debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debug.h; sourceTree = "<group>"; };
 		3804C75A197DA85F00C7E6ED /* _debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = _debug.h; sourceTree = "<group>"; };
+		3830366519904FA600C1EE0C /* capi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = capi.cpp; sourceTree = "<group>"; };
+		3830366619904FA600C1EE0C /* capi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = capi.h; sourceTree = "<group>"; };
 		38317F3D19681DBF00D68031 /* ksx5002.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ksx5002.cpp; sourceTree = "<group>"; };
 		38317F3E19681DBF00D68031 /* ksx5002.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ksx5002.h; sourceTree = "<group>"; };
 		38317F4019685A3800D68031 /* utf8.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = utf8.cpp; sourceTree = "<group>"; };
 		38317F4119685A3800D68031 /* utf8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utf8.h; sourceTree = "<group>"; };
 		3855212D19455AD200716ABA /* decoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = decoder.cpp; sourceTree = "<group>"; };
 		3855212F19455AD900716ABA /* decoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = decoder.h; sourceTree = "<group>"; };
+		386309061992D9A70039369C /* cheonjiin.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cheonjiin.cpp; sourceTree = "<group>"; };
+		386309071992D9A70039369C /* cheonjiin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cheonjiin.h; sourceTree = "<group>"; };
 		38904F4B1942C02200858B09 /* libhangeul.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libhangeul.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		38904F4E1942C02200858B09 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		38904F521942C02200858B09 /* hangeul-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "hangeul-Prefix.pch"; sourceTree = "<group>"; };
@@ -144,21 +148,25 @@
 			children = (
 				38904F531942C02200858B09 /* hangeul.h */,
 				38904F771942C05500858B09 /* util.h */,
-				38C6A11219453D9C0061CC7C /* data.cpp */,
 				38C6A11119453A5D0061CC7C /* data.h */,
+				38C6A11219453D9C0061CC7C /* data.cpp */,
 				38904F7A19438FE600858B09 /* type.h */,
-				38904F741942C05500858B09 /* phase.cpp */,
 				38904F751942C05500858B09 /* phase.h */,
-				3855212D19455AD200716ABA /* decoder.cpp */,
+				38904F741942C05500858B09 /* phase.cpp */,
 				3855212F19455AD900716ABA /* decoder.h */,
-				38C6A0E91944F8BC0061CC7C /* context.cpp */,
+				3855212D19455AD200716ABA /* decoder.cpp */,
 				38C6A0EB1944F8C40061CC7C /* context.h */,
+				38C6A0E91944F8BC0061CC7C /* context.cpp */,
 				38317F4019685A3800D68031 /* utf8.cpp */,
 				38317F4119685A3800D68031 /* utf8.h */,
-				38317F3D19681DBF00D68031 /* ksx5002.cpp */,
 				38317F3E19681DBF00D68031 /* ksx5002.h */,
-				38C6A0ED1944FA850061CC7C /* hangul.cpp */,
+				38317F3D19681DBF00D68031 /* ksx5002.cpp */,
+				386309071992D9A70039369C /* cheonjiin.h */,
+				386309061992D9A70039369C /* cheonjiin.cpp */,
 				38C6A0EC1944FA770061CC7C /* hangul.h */,
+				38C6A0ED1944FA850061CC7C /* hangul.cpp */,
+				3830366619904FA600C1EE0C /* capi.h */,
+				3830366519904FA600C1EE0C /* capi.cpp */,
 				3804C75A197DA85F00C7E6ED /* _debug.h */,
 				38904F511942C02200858B09 /* Supporting Files */,
 			);
@@ -273,11 +281,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				38904F781942C05500858B09 /* phase.cpp in Sources */,
-				386CD9DC1951891400700620 /* hangul.cpp in Sources */,
 				38C6A0EA1944F8BC0061CC7C /* context.cpp in Sources */,
 				3855212E19455AD200716ABA /* decoder.cpp in Sources */,
 				38317F3F19681DBF00D68031 /* ksx5002.cpp in Sources */,
 				38317F4219685A3800D68031 /* utf8.cpp in Sources */,
+				3830366719904FA600C1EE0C /* capi.cpp in Sources */,
 				38C6A11319453D9C0061CC7C /* data.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

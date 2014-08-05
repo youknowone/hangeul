@@ -16,6 +16,11 @@ namespace hangeul {
     public:
         virtual UnicodeVector decode(State state) = 0;
     };
+
+    class BypassDecoder: public Decoder {
+    public:
+        virtual UnicodeVector decode(State state);
+    };
 }
 
 #endif

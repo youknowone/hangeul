@@ -1,5 +1,5 @@
 //
-//  KSX5002.h
+//  ksx5002.h
 //  hangeul
 //
 //  Created by Jeong YunWon on 2014. 7. 5..

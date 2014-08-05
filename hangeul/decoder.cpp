@@ -9,5 +9,9 @@
 #include <hangeul/decoder.h>
 
 namespace hangeul {
-
+    UnicodeVector BypassDecoder::decode(hangeul::State state) {
+        UnicodeVector unicodes;
+        unicodes.push_back(state[1]);
+        return unicodes;
+    }
 }

@@ -60,6 +60,8 @@ namespace hangeul {
             Eu = 19,
             Ui = 20,
             I = 21,
+            Ao = 32, // temp & dirty
+            Yao = 33,
         };
         extern Vowel::Type None;
     }

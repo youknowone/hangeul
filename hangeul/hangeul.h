@@ -6,9 +6,17 @@
 //  Copyright (c) 2014년 youknowone.org. All rights reserved.
 //
 
+#if __cplusplus
+
 #include <hangeul/util.h>
 #include <hangeul/type.h>
 #include <hangeul/phase.h>
 #include <hangeul/context.h>
 
 #include <hangeul/ksx5002.h>
+
+#else
+
+#include <hangeul/capi.h>
+
+#endif

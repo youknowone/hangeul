@@ -39,7 +39,6 @@ namespace hangeul {
         virtual PhaseResult put(StateList states) = 0;
         virtual PhaseResult put_state(StateList states, State new_state); 
 
-        static State InitialState() { assert(false); State state; return state; }
         static std::string InputType() { assert(false); return ""; }
         static std::string OutputType() { assert(false); return ""; }
 
@@ -47,6 +46,10 @@ namespace hangeul {
         bool validate_set(uint32_t key, uint32_t value) { return true; }
 
         virtual ~Phase() { }
+    };
+
+    class BypassPhase: public Phase {
+        virtual PhaseResult put(StateList states) { return PhaseResult::Make(states, true); }
     };
 
     class MultiplePhase: public Phase {

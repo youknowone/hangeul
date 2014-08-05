@@ -155,5 +155,4 @@ namespace hangeul {
 
 }
 
-
 #endif
