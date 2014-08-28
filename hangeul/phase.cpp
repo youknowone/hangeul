@@ -76,7 +76,7 @@ namespace hangeul {
     #define K(V) KeyPosition ## V
 
     PhaseResult QwertyToKeyStrokePhase::put(StateList states) {
-        #define DDD 1
+        #define DDD 0
         #define S(V) KeyPosition(KeyPosition ## V + 0x20000)
         static KeyPosition map[] = {
             // 0x00

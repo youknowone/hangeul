@@ -25,6 +25,11 @@ namespace hangeul {
         }
     }
 
+    void Context::truncate() {
+        this->flush();
+        this->commited();
+    }
+
     UnicodeVector Context::commited() {
         UnicodeVector result;
         while (this->_states.size() > 1) {

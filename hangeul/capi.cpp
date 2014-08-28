@@ -68,6 +68,10 @@ void context_flush(Context *context) {
     ((hangeul::Context *)context)->flush();
 }
 
+void context_truncate(Context *context) {
+    ((hangeul::Context *)context)->truncate();
+}
+
 void context_get_commited(Context *context, UnicodeVector *buffer) {
     *(hangeul::UnicodeVector *)buffer = ((hangeul::Context *)context)->commited();
 }

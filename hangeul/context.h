@@ -33,6 +33,7 @@ namespace hangeul {
 
         bool put(InputSource input);
         void flush();
+        void truncate();
         UnicodeVector commited();
         UnicodeVector composed();
     };

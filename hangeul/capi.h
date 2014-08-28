@@ -50,6 +50,7 @@ StateList *context_get_states(Context *context);
 Decoder *context_get_decoder(Context *context);
 bool context_put(Context *context, InputSource input);
 void context_flush(Context *context);
+void context_truncate(Context *context);
 void context_get_commited(Context *context, UnicodeVector *buffer);
 void context_get_composed(Context *context, UnicodeVector *buffer);
 
