@@ -104,6 +104,12 @@ Decoder *ksx5002_decoder() {
     return obj;
 }
 
+Phase *danmoum_from_qwerty_phase() {
+    static hangeul::Phase *obj = nullptr;
+    if (obj == nullptr) { obj = new hangeul::Danmoum::FromQwertyPhase; }
+    return obj;
+}
+
 uint32_t ksx5002_label(char key) {
     static hangeul::QwertyToKeyStrokePhase stroke_phase;
     static hangeul::KSX5002::Layout layout;
@@ -116,4 +122,9 @@ uint32_t ksx5002_label(char key) {
     auto annotation = layout.translate(stroke, states);
     auto unicode = layout.label(annotation);
     return unicode;
+}
+
+uint32_t danmoum_label(char key) {
+    if (key == 'y' || key == 'Y') key = 'h';
+    return ksx5002_label(key);
 }

@@ -58,9 +58,11 @@ Phase *bypass_phase();
 Decoder *bypass_decoder();
 Phase *ksx5002_from_qwerty_phase();
 Decoder *ksx5002_decoder();
+Phase *danmoum_from_qwerty_phase();
 
 uint32_t ksx5002_label(char key);
-    
+uint32_t danmoum_label(char key);
+
 #if __cplusplus
 }
 #endif
