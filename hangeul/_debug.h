@@ -23,6 +23,7 @@
 
     #define dprintf(...)
     #define dlog(...)
+    #define dassert(...)
 #endif
 
 #endif

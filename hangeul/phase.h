@@ -52,6 +52,10 @@ namespace hangeul {
         virtual PhaseResult put(StateList states) { return PhaseResult::Make(states, true); }
     };
 
+    class BlockPhase: public Phase {
+        virtual PhaseResult put(StateList states) { return PhaseResult::Make(states, false); }
+    };
+
     class MultiplePhase: public Phase {
         bool needs_delete;
     public:

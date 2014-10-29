@@ -82,7 +82,7 @@ void context_get_composed(Context *context, UnicodeVector *buffer) {
 
 Phase *bypass_phase() {
     static hangeul::Phase *obj = nullptr;
-    if (obj == nullptr) { obj = new hangeul::BypassPhase; }
+    if (obj == nullptr) { obj = new hangeul::BlockPhase; }
     return obj;
 }
 
