@@ -123,8 +123,3 @@ uint32_t ksx5002_label(char key) {
     auto unicode = layout.label(annotation);
     return unicode;
 }
-
-uint32_t danmoum_label(char key) {
-    if (key == 'y' || key == 'Y') key = 'h';
-    return ksx5002_label(key);
-}

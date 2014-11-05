@@ -189,6 +189,15 @@ namespace hangeul {
                     combined = true;
                 }
             }
+            else if (secondary['a'] && !secondary['b'] && !secondary['c'] && state['a']) {
+                auto c1 = secondary['a'];
+                auto c2 = state['a'];
+                auto composed = search_rule(InitialCompositionRules, c1, c2);
+                if (!composed.is_none) {
+                    secondary['a'] = composed.some;
+                    combined = true;
+                }
+            }
             if (combined) {
                 states.erase(states.cbegin());
                 return PhaseResult::Make(states, false);
@@ -286,112 +295,6 @@ namespace hangeul {
     }
 
     namespace Danmoum {
-        KSX5002::Annotation Layout::translate(KeyStroke stroke, StateList states) {
-            #define A(C) { KSX5002::AnnotationClass::ASCII, C }
-            #define F(C) { KSX5002::AnnotationClass::Function, KeyPosition ## C }
-            #define C(C) { KSX5002::AnnotationClass::Consonant, Consonant:: C }
-            #define V(C) { KSX5002::AnnotationClass::Vowel, Vowel:: C }
-            #define E() { KSX5002::AnnotationClass::Function, 0 }
-
-            static KSX5002::Annotation map1[] = {
-                A('`'), A('1'), A('2'), A('3'), A('4'), A('5'), A('6'), A('7'), A('8'), A('9'), A('0'), A('-'), A('='), A('\\'), F(Backspace),  E(),
-                A('\t'), C(B), C(J), C(D), C(G), C(S), V(O), V(Yeo), V(Ya), V(Ae), V(E), A('['),  A(']'), E(), E(), E(),
-                E(), C(M), C(N), C(NG), C(R), C(H), V(Yo), V(Eo), V(A), V(I), A(';'), A('\''), A('\n'), E(), E(), E(),
-                E(), C(K), C(T), C(CH), C(P), V(Yu), V(U), V(Eu), A(','), A('.'), A('/'), E(), E(), E(), E(), E(),
-                A(' '),
-            };
-
-            static KSX5002::Annotation map2[] = {
-                A('~'), A('!'), A('@'), A('#'), A('$'), A('%'), A('^'), A('&'), A('*'), A('('), A(')'), A('_'), A('+'), A('|'), F(Backspace),  E(),
-                A('\t'), C(BB), C(JJ), C(DD), C(GG), C(SS), V(O), V(Yeo), V(Ya), V(Yae), V(Ye), A('{'),  A('}'), E(), E(), E(),
-                E(), C(M), C(N), C(NG), C(R), C(H), V(Yo), V(Eo), V(A), V(I), A(':'), A('"'), A('\n'), E(), E(), E(),
-                E(), C(K), C(T), C(CH), C(P), V(Yu), V(U), V(Eu), A('<'), A('>'), A('?'), E(), E(), E(), E(), E(),
-                A(' '),
-            };
-
-            #undef A
-            #undef F
-            #undef C
-            #undef V
-            #undef E
-
-            auto masked = stroke & 0xff;
-            KSX5002::Annotation annotation;
-            if (stroke & 0x20000) {
-                annotation = map2[masked];
-            } else {
-                annotation = map1[masked];
-            }
-            return annotation;
-        }
-
-        PhaseResult KeyStrokeToAnnotationPhase::put(StateList states) {
-            #define DDD 0
-            static Layout layout;
-
-            auto& state = states.front();
-            auto stroke = state[2];
-            auto annotation = layout.translate(stroke, states);
-
-            switch (annotation.type) {
-                case KSX5002::AnnotationClass::Consonant:
-                    state['a'] = annotation.data;
-                    break;
-                case KSX5002::AnnotationClass::Vowel:
-                    state['b'] = annotation.data;
-                    break;
-                case KSX5002::AnnotationClass::ASCII:
-                    state[0] = annotation.data;
-                    break;
-                case KSX5002::AnnotationClass::Function:
-                    state[2] = annotation.data;
-                    if (annotation.data == KeyPositionBackspace) {
-                        state[-1] = 1;
-                    }
-                    break;
-                default:
-                    assert(false);
-                    break;
-            }
-
-            auto res = PhaseResult::Make(states, state['a'] || state['b'] || state[-1]);
-            return res;
-            #undef DDD
-        }
-
-        PhaseResult BackspacePhase::put(StateList states) {
-            states.pop_front();
-            if (states.size() == 0) {
-                return PhaseResult::Make(states, false);
-            } else {
-                auto& state = states.front();
-                if (state['c']) {
-                    auto pair = search_rule(KSX5002::FinalCompositionRules, state['c']);
-                    if (!pair.is_none) {
-                        state['c'] = pair.some[0];
-                    } else {
-                        state['c'] = 0;
-                    }
-                }
-                else if (state['b']) {
-                    auto pair = search_rule(VowelCompositionRules, state['b']);
-                    if (!pair.is_none) {
-                        state['b'] = pair.some[0];
-                    } else {
-                        if (state['a']) {
-                            state['b'] = 0;
-                        } else {
-                            states.pop_front();
-                        }
-                    }
-                }
-                else if (state['a']) {
-                    states.pop_front();
-                }
-                return PhaseResult::Make(states, true);
-            }
-        }
-
         PhaseResult JasoCompositionPhase::put(StateList states) {
             if (states.size() == 1) {
                 return PhaseResult::Make(states, true);
@@ -419,6 +322,15 @@ namespace hangeul {
                     combined = true;
                 }
             }
+            else if (secondary['a'] && !secondary['b'] && !secondary['c'] && state['a']) {
+                auto c1 = secondary['a'];
+                auto c2 = state['a'];
+                auto composed = search_rule(KSX5002::InitialCompositionRules, c1, c2);
+                if (!composed.is_none) {
+                    secondary['a'] = composed.some;
+                    combined = true;
+                }
+            }
             if (combined) {
                 states.erase(states.cbegin());
                 return PhaseResult::Make(states, false);
@@ -428,7 +340,7 @@ namespace hangeul {
 
         FromQwertyPhase::FromQwertyPhase() : CombinedPhase() {
             this->phases.push_back((Phase *)new QwertyToKeyStrokePhase());
-            this->phases.push_back((Phase *)new KeyStrokeToAnnotationPhase());
+            this->phases.push_back((Phase *)new KSX5002::KeyStrokeToAnnotationPhase());
 
             auto branch = new BranchPhase();
             this->phases.push_back(branch);
@@ -444,7 +356,7 @@ namespace hangeul {
             }
 
             {
-                auto backspace = new BackspacePhase();
+                auto backspace = new KSX5002::BackspacePhase();
                 branch->phases.push_back(backspace);
             }
         }

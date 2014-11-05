@@ -26,6 +26,17 @@ namespace KSX5002 {
         };
     }
 
+    const CompositionRule InitialCompositionRules[] = {
+        #define R(A, B, X) {Consonant::A, Consonant::B, Consonant::X}
+        R(G, G, GG),
+        R(D, D, DD),
+        R(B, B, BB),
+        R(S, S, SS),
+        R(J, J, JJ),
+        {0, 0, 0},
+        #undef R
+    };
+
     const CompositionRule FinalCompositionRules[] = {
         #define R(A, B, X) {Consonant::A, Consonant::B, Consonant::X}
         R(G, S, GS),
@@ -140,28 +151,6 @@ namespace Danmoum {
         R(Eu, I, Ui),
         {0, 0, 0},
         #undef R
-    };
-
-    class Layout: KSX5002::Layout {
-    public:
-        KSX5002::Annotation translate(KeyStroke stroke, StateList states);
-    };
-
-    //! state[2]->state[0, 'a', 'b', 'c']
-    class KeyStrokeToAnnotationPhase: public AnnotationPhase {
-    public:
-        virtual PhaseResult put(StateList state);
-
-        static std::string InputType() { assert(false); return "keyposition"; }
-        static std::string OutputType() { assert(false); return "annotation-ksx5002"; }
-    };
-
-    class BackspacePhase: public Phase {
-    public:
-        virtual PhaseResult put(StateList state);
-
-        static std::string InputType() { assert(false); return "annotation-ksx5002"; }
-        static std::string OutputType() { assert(false); return "combination-ksx5002"; }
     };
 
     class JasoCompositionPhase: public Phase {
