@@ -14,12 +14,14 @@
 namespace hangeul {
     class Decoder {
     public:
-        virtual UnicodeVector decode(State state) = 0;
+        virtual UnicodeVector commited(State& state) = 0;
+        virtual UnicodeVector composed(State& state) = 0;
     };
 
     class BypassDecoder: public Decoder {
     public:
-        virtual UnicodeVector decode(State state);
+        virtual UnicodeVector commited(State& state);
+        virtual UnicodeVector composed(State& state);
     };
 }
 

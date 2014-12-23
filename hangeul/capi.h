@@ -45,7 +45,7 @@ bool phaseresult_get_processed(PhaseResult *);
 
 bool phase_put(Phase *phase, StateList *states);
 
-Context *context_create(Phase *processor, Decoder *decoder);
+Context *context_create(Phase *handler, Phase *combinator, Decoder *decoder);
 StateList *context_get_states(Context *context);
 Decoder *context_get_decoder(Context *context);
 bool context_put(Context *context, InputSource input);
@@ -56,9 +56,16 @@ void context_get_composed(Context *context, UnicodeVector *buffer);
 
 Phase *bypass_phase();
 Decoder *bypass_decoder();
-Phase *ksx5002_from_qwerty_phase();
+Phase *ksx5002_from_qwerty_handler();
+Phase *ksx5002_combinator();
 Decoder *ksx5002_decoder();
-Phase *danmoum_from_qwerty_phase();
+Phase *danmoum_combinator();
+Phase *danmoum_from_qwerty_handler();
+Decoder *danmoum_decoder();
+Phase *cheonjiin_from_tenkey_handler();
+Phase *cheonjiin_combinator();
+Decoder *cheonjiin_decoder();
+
 
 uint32_t ksx5002_label(char key);
 

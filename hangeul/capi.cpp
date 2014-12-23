@@ -20,14 +20,9 @@
 
 
 ALLOCFUNCS(State, state)
-ALLOCFUNCS(StateList, statelist)
 
 void state_set(State *state, int32_t key, int32_t value) {
     (*((hangeul::State *)state))[key] = value;
-}
-
-void statelist_append(StateList *states, State *state) {
-    ((hangeul::StateList *)states)->push_front(*(hangeul::State *)state);
 }
 
 ALLOCFUNCS(UnicodeVector, unicodevector)
@@ -41,23 +36,23 @@ Unicode unicodevector_get(UnicodeVector *unicodes, size_t index) {
 }
 
 ALLOCFUNCS(PhaseResult, phaseresult)
-GETPFUNC(PhaseResult, phaseresult, StateList, states)
+GETPFUNC(PhaseResult, phaseresult, State, state)
 GETVFUNC(PhaseResult, phaseresult, bool, processed)
 
-bool phase_put(Phase *phase, StateList *states) {
-    auto statesp = (hangeul::StateList *)states;
+bool phase_put(Phase *phase, State *state) {
+    auto statesp = (hangeul::State *)state;
     auto result = ((hangeul::Phase *)phase)->put(*statesp);
-    *statesp = result.states;
+    *statesp = result.state;
     return result.processed;
 }
 
-Context *context_create(Phase *processor, Decoder *decoder) {
-    return new hangeul::Context((hangeul::Phase *)processor, (hangeul::Decoder *)decoder);
+Context *context_create(Phase *handler, Phase *combinator, Decoder *decoder) {
+    return new hangeul::Context((hangeul::Phase *)handler, (hangeul::Phase *)combinator, (hangeul::Decoder *)decoder);
 }
 
 DEALLOCFUNC(Context, context)
 
-GETCFUNC(Context, context, StateList, states)
+GETCFUNC(Context, context, State, state)
 GETCFUNC(Context, context, Decoder, decoder)
 
 bool context_put(Context *context, InputSource input) {
@@ -92,21 +87,81 @@ Decoder *bypass_decoder() {
     return obj;
 }
 
-Phase *ksx5002_from_qwerty_phase() {
+Phase *ksx5002_from_qwerty_handler() {
     static hangeul::Phase *obj = nullptr;
-    if (obj == nullptr) { obj = new hangeul::KSX5002::FromQwertyPhase; }
+    static hangeul::KSX5002::Combinator *combinator = nullptr;
+    if (obj == nullptr) {
+        combinator = new hangeul::KSX5002::Combinator();
+        obj = new hangeul::KSX5002::FromQwertyHandler(combinator);
+    }
+    return obj;
+}
+
+Phase *ksx5002_combinator() {
+    static hangeul::Phase *obj = nullptr;
+    if (obj == nullptr) { obj = new hangeul::KSX5002::Combinator; }
     return obj;
 }
 
 Decoder *ksx5002_decoder() {
     static hangeul::Decoder *obj = nullptr;
-    if (obj == nullptr) { obj = new hangeul::KSX5002::Decoder; }
+    static hangeul::KSX5002::Combinator *combinator = nullptr;
+    if (obj == nullptr) {
+        combinator = new hangeul::KSX5002::Combinator();
+        obj = new hangeul::KSX5002::Decoder(combinator);
+    }
     return obj;
 }
 
-Phase *danmoum_from_qwerty_phase() {
+Phase *danmoum_combinator() {
     static hangeul::Phase *obj = nullptr;
-    if (obj == nullptr) { obj = new hangeul::Danmoum::FromQwertyPhase; }
+    if (obj == nullptr) { obj = new hangeul::Danmoum::Combinator; }
+    return obj;
+}
+
+Phase *danmoum_from_qwerty_handler() {
+    static hangeul::Phase *obj = nullptr;
+    static hangeul::Danmoum::Combinator *combinator = nullptr;
+    if (obj == nullptr) {
+        combinator = new hangeul::Danmoum::Combinator();
+        obj = new hangeul::Danmoum::FromQwertyHandler(combinator);
+    }
+    return obj;
+}
+
+Decoder *danmoum_decoder() {
+    static hangeul::Decoder *obj = nullptr;
+    static hangeul::Danmoum::Combinator *combinator = nullptr;
+    if (obj == nullptr) {
+        combinator = new hangeul::Danmoum::Combinator();
+        obj = new hangeul::KSX5002::Decoder(combinator);
+    }
+    return obj;
+}
+
+Phase *cheonjiin_combinator() {
+    static hangeul::Phase *obj = nullptr;
+    if (obj == nullptr) { obj = new hangeul::Cheonjiin::Combinator; }
+    return obj;
+}
+
+Phase *cheonjiin_from_tenkey_handler() {
+    static hangeul::Phase *obj = nullptr;
+    static hangeul::Cheonjiin::Combinator *combinator = nullptr;
+    if (obj == nullptr) {
+        combinator = new hangeul::Cheonjiin::Combinator();
+        obj = new hangeul::Cheonjiin::FromTenkeyHandler(combinator);
+    }
+    return obj;
+}
+
+Decoder *cheonjiin_decoder() {
+    static hangeul::Decoder *obj = nullptr;
+    static hangeul::Cheonjiin::Combinator *combinator = nullptr;
+    if (obj == nullptr) {
+        combinator = new hangeul::Cheonjiin::Combinator();
+        obj = new hangeul::Cheonjiin::Decoder(combinator);
+    }
     return obj;
 }
 
@@ -114,12 +169,9 @@ uint32_t ksx5002_label(char key) {
     static hangeul::QwertyToKeyStrokePhase stroke_phase;
     static hangeul::KSX5002::Layout layout;
     hangeul::State state;
-    state[1] = key;
-    hangeul::StateList states;
-    states.push_back(state);
-    auto result = stroke_phase.put(states);
-    auto stroke = result.states.front()[2];
-    auto annotation = layout.translate(stroke, states);
+    state[-1] = key;
+    auto result = stroke_phase.put(state);
+    auto annotation = layout.translate(state);
     auto unicode = layout.label(annotation);
     return unicode;
 }

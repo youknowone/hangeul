@@ -7,55 +7,38 @@
 //
 
 #include <hangeul/context.h>
+#include <cdebug/debug.h>
+#include <cstdio>
 
 namespace hangeul {
 
     bool Context::put(InputSource input) {
-        State state;
-        state[1] = input;
-        this->_states.push_front(state);
-        auto res = this->_processor->put(this->_states);
-        this->_states = res.states;
+        this->_state[-1] = input;
+        this->_state[0] = input;
+        auto res = this->_handler->put(this->_state);
+        this->_state = res.state;
+        //for (auto& it: this->_state) { dlog(1, "key: %x / val: %x", it.first, it.second); }
         return res.processed;
     }
 
     void Context::flush() {
-        if (this->_states.size()) {
-            this->_states.front()[-1] = 1;
-        }
+        this->_state[-1] = -1;
+        this->_state[0] = -1;
+        this->_handler->put(this->_state);
     }
 
     void Context::truncate() {
-        this->flush();
-        this->commited();
+        this->_state = State();
     }
 
     UnicodeVector Context::commited() {
-        UnicodeVector result;
-        while (this->_states.size() > 1) {
-            // FIXME: not a STL way
-            auto vec = this->_decoder->decode(this->_states.back());
-            append_vector(result, vec);
-            this->_states.pop_back();
-        }
-        if (this->_states.size() && this->_states.back()[-1]) {
-            auto vec = this->_decoder->decode(this->_states.back());
-            append_vector(result, vec);
-            this->_states.pop_back();
-        }
-        return result;
+        
+        return this->decoder().commited(this->_state);
     }
 
     UnicodeVector Context::composed() {
-        StateList copied = this->_states;
-        copied.reverse();
-        UnicodeVector result;
-        for (auto& state: copied) {
-            auto vec = this->_decoder->decode(state);
-            append_vector(result, vec);
-            assert(result.back() == vec.back());
-        }
-        return result;
+
+        return this->decoder().composed(this->_state);
     }
 
 

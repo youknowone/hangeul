@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <cassert>
 
 namespace hangeul {
     typedef uint32_t InputSource;
@@ -22,13 +23,71 @@ namespace hangeul {
 
     class State: public std::map<int32_t, int32_t> {
     public:
-        static State InputSource(int32_t input) {
-            State state;
-            state[1] = input;
-            return state;
+        class ArrayProxy {
+            State *owner;
+            int32_t head;
+            size_t max_size;
+        public:
+            void set_size(size_t size) {
+                (*this->owner)[this->head - 1] = (int32_t)size;
+            }
+        public:
+            ArrayProxy(State *owner, int32_t head, ssize_t maximum_size = -1) {
+                this->owner = owner;
+                this->head = head;
+                this->max_size = maximum_size;
+            }
+            size_t size() {
+                auto size = (*this->owner)[this->head - 1];
+                return size;
+            }
+            int32_t& operator[](ssize_t subscript) {
+                if (subscript >= 0) {
+                    return (*this->owner)[(int32_t)(this->head + subscript)];
+                } else {
+                    return (*this->owner)[(int32_t)(this->head + this->size() + subscript)];
+                }
+            }
+            int32_t& back() {
+                auto size = this->size();
+                auto& value = (*this)[size - 1];
+                return value;
+            }
+            void push_back(int32_t value) {
+                auto size = this->size();
+                (*this)[size] = value;
+                this->set_size(size + 1);
+                assert(size + 1 <= max_size);
+            }
+            void pop_back() {
+                auto size = this->size();
+                this->set_size(size - 1);
+            }
+            void erase(uint32_t from_idx, size_t length = 1) { // very expensive
+                auto size = this->size();
+                for (uint32_t i = from_idx + length; i < size; i++) {
+                    (*this->owner)[i - length] = (*this->owner)[i];
+                }
+                this->set_size(size - length);
+            }
+            void import(ArrayProxy& other) {
+                this->set_size(other.size());
+                for (int i = 0; i < other.size(); i++) {
+                    (*this)[i] = other[i];
+                }
+            }
+        };
+    public:
+        ArrayProxy array(int32_t idx) {
+            return ArrayProxy(this, idx);
+        }
+        InputSource latestInputSource() {
+            return (*this)[-1];
+        }
+        KeyStroke latestKeyStroke() {
+            return (*this)[0];
         }
     };
-    typedef std::list<State> StateList;
 
     enum KeyPosition { // platform independent position
         KeyPositionGrave = 0x00,
@@ -149,6 +208,7 @@ namespace hangeul {
     };
 
     typedef uint32_t KeyStroke;
+    #define KeyStrokeBackspace 0x0e
     //KeyStroke KeyStrokeFromPositionAndModifiers(KeyPosition position, bool modifiers[5]) {
     //    return (modifiers[0] << 16) + (modifiers[1] << 17) + (modifiers[2] << 18) + (modifiers[3] << 19) + (modifiers[4] << 20) + position; // altshift, shift, control, alt, OS
     //}

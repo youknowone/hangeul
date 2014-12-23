@@ -20,6 +20,8 @@
 		38904F691942C02200858B09 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 38904F671942C02200858B09 /* InfoPlist.strings */; };
 		38904F6B1942C02200858B09 /* hangeulTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 38904F6A1942C02200858B09 /* hangeulTests.mm */; };
 		38904F781942C05500858B09 /* phase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38904F741942C05500858B09 /* phase.cpp */; };
+		38A849DC1A4FFA2B00A31A96 /* cheonjiin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 386309061992D9A70039369C /* cheonjiin.cpp */; };
+		38A849E01A51EA1900A31A96 /* tenkey.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38A849DE1A51EA1900A31A96 /* tenkey.cpp */; };
 		38C6A0EA1944F8BC0061CC7C /* context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C6A0E91944F8BC0061CC7C /* context.cpp */; };
 		38C6A11319453D9C0061CC7C /* data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38C6A11219453D9C0061CC7C /* data.cpp */; };
 /* End PBXBuildFile section */
@@ -74,6 +76,8 @@
 		38904F751942C05500858B09 /* phase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = phase.h; sourceTree = "<group>"; };
 		38904F771942C05500858B09 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		38904F7A19438FE600858B09 /* type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = type.h; sourceTree = "<group>"; };
+		38A849DE1A51EA1900A31A96 /* tenkey.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tenkey.cpp; sourceTree = "<group>"; };
+		38A849DF1A51EA1900A31A96 /* tenkey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tenkey.h; sourceTree = "<group>"; };
 		38C6A0E91944F8BC0061CC7C /* context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = context.cpp; sourceTree = "<group>"; };
 		38C6A0EB1944F8C40061CC7C /* context.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = context.h; sourceTree = "<group>"; };
 		38C6A0EC1944FA770061CC7C /* hangul.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hangul.h; sourceTree = "<group>"; };
@@ -161,6 +165,8 @@
 				38317F4119685A3800D68031 /* utf8.h */,
 				38317F3E19681DBF00D68031 /* ksx5002.h */,
 				38317F3D19681DBF00D68031 /* ksx5002.cpp */,
+				38A849DF1A51EA1900A31A96 /* tenkey.h */,
+				38A849DE1A51EA1900A31A96 /* tenkey.cpp */,
 				386309071992D9A70039369C /* cheonjiin.h */,
 				386309061992D9A70039369C /* cheonjiin.cpp */,
 				38C6A0EC1944FA770061CC7C /* hangul.h */,
@@ -280,11 +286,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				38A849E01A51EA1900A31A96 /* tenkey.cpp in Sources */,
 				38904F781942C05500858B09 /* phase.cpp in Sources */,
 				38C6A0EA1944F8BC0061CC7C /* context.cpp in Sources */,
 				3855212E19455AD200716ABA /* decoder.cpp in Sources */,
 				38317F3F19681DBF00D68031 /* ksx5002.cpp in Sources */,
 				38317F4219685A3800D68031 /* utf8.cpp in Sources */,
+				38A849DC1A4FFA2B00A31A96 /* cheonjiin.cpp in Sources */,
 				3830366719904FA600C1EE0C /* capi.cpp in Sources */,
 				38C6A11319453D9C0061CC7C /* data.cpp in Sources */,
 			);

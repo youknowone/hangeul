@@ -22,13 +22,14 @@ namespace hangeul {
 
     class Context {
     protected:
-        StateList _states;
-        Phase *_processor;
+        State _state;
+        Phase *_handler;
+        Phase *_combinator;
         Decoder *_decoder;
     public:
-        Context(Phase *processor, Decoder *decoder) { this->_processor = processor; this->_decoder = decoder; }
+        Context(Phase *handler, Phase *combinator, Decoder *decoder) { this->_handler = handler; this->_combinator = combinator; this->_decoder = decoder; }
 
-        StateList& states() { return this->_states; }
+        State& state() { return this->_state; }
         Decoder& decoder() { return *this->_decoder; }
 
         bool put(InputSource input);

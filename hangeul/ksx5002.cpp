@@ -12,34 +12,82 @@
 namespace hangeul {
 
     namespace KSX5002 {
-        UnicodeVector Decoder::decode(State state) {
+        State Decoder::combined(State& state) {
+            auto rstate = State();
+            auto strokes = state.array(STROKES_IDX);
+            for (int i = 0; i < strokes.size(); i++) {
+                auto stroke = strokes[i];
+                rstate[0] = stroke;
+                auto result = this->combinator->put(rstate);
+                rstate = result.state;
+                if (!result.processed) {
+                    //assert(false);
+                    //break;
+                }
+                //for (auto it: charstate) { dlog(1, "k:%d / v:%d", it.first, it.second); }
+            }
+            return rstate;
+        }
+
+        UnicodeVector Decoder::decode(State::ArrayProxy& stroke) {
             UnicodeVector unicodes;
-            if (state['a'] && state['b']) {
-                auto a = state['a'];
-                auto c = state['c'];
+            if (stroke[1] && stroke[2]) {
+                auto a = stroke[1];
+                auto c = stroke[3];
                 auto v = 0xac00;
                 v += (Initial::FromConsonant[a] - 1) * 21 * 28;
-                v += (state['b'] - 1) * 28;
+                v += (stroke[2] - 1) * 28;
                 if (c) {
                     v += Final::FromConsonant[c];
                 }
                 unicodes.push_back(v);
             }
-            else if (state['a'] && !state['b']) {
-                auto v = 0x3131 + state['a'] - 1;
+            else if (stroke[1] && !stroke[2]) {
+                auto v = 0x3131 + stroke[1] - 1;
                 unicodes.push_back(v);
             }
-            else if (!state['a'] && state['b']) {
-                auto v = 0x314f + state['b'] - 1;
+            else if (!stroke[1] && stroke[2]) {
+                auto v = 0x314f + stroke[2] - 1;
                 unicodes.push_back(v);
             }
             else {
-                unicodes.push_back(state[0]);
+                unicodes.push_back(stroke[10]);
             }
             return unicodes;
         }
 
-        Annotation Layout::translate(KeyStroke stroke, StateList states) {
+        UnicodeVector Decoder::commited(State& state) {
+            auto unicodes = this->composed(state);
+            auto string = state.array(STRING_IDX);
+            if (state[0] == -1) {
+                string.set_size(0);
+                return unicodes;
+            } else {
+                if (unicodes.size() > 0) {
+                    unicodes.pop_back();
+                }
+                if (string.size() > 0) {
+                    string.erase(0, string.size() - 1);
+                }
+            }
+            return unicodes;
+        }
+
+        UnicodeVector Decoder::composed(State& state) {
+            auto unicodes = UnicodeVector();
+            State cstate = this->combined(state);
+            auto characters = cstate.array(0x1000);
+            for (auto i = 0; i < characters.size(); i++) {
+                auto character = cstate.array(0x1000 + (i + 1) * 0x10);
+                auto univector = this->decode(character);
+                for (auto& uni: univector) {
+                    unicodes.push_back(uni);
+                }
+            }
+            return unicodes;
+        }
+
+        Annotation Layout::translate(State& state) {
             #define A(C) { AnnotationClass::ASCII, C }
             #define F(C) { AnnotationClass::Function, KeyPosition ## C }
             #define C(C) { AnnotationClass::Consonant, Consonant:: C }
@@ -68,6 +116,7 @@ namespace hangeul {
             #undef V
             #undef E
 
+            auto stroke = state.latestKeyStroke();
             auto masked = stroke & 0xff;
             Annotation annotation;
             if (stroke & 0x20000) {
@@ -95,270 +144,247 @@ namespace hangeul {
             return 0;
         }
 
-        PhaseResult KeyStrokeToAnnotationPhase::put(StateList states) {
-            #define DDD 0
+        PhaseResult AnnotationPhase::put(State& state) {
             static Layout layout;
 
-            auto& state = states.front();
-            auto stroke = state[2];
-            auto annotation = layout.translate(stroke, states);
+            auto annotation = layout.translate(state);
+            auto characters = state.array(0x1000);
+            auto strokes = state.array(0x2000);
 
+            characters.push_back(annotation.type);
+            strokes.push_back(annotation.data);
+            auto character = state.array(0x1000 + characters.size() * 0x10);
+
+            character[1] = 0;
+            character[2] = 0;
+            character[10] = 0;
+            character[11] = 0;
             switch (annotation.type) {
                 case AnnotationClass::Consonant:
-                    state['a'] = annotation.data;
+                    character[1] = annotation.data;
                     break;
                 case AnnotationClass::Vowel:
-                    state['b'] = annotation.data;
+                    character[2] = annotation.data;
                     break;
                 case AnnotationClass::ASCII:
-                    state[0] = annotation.data;
+                    character[10] = annotation.data;
                     break;
                 case AnnotationClass::Function:
-                    state[2] = annotation.data;
-                    if (annotation.data == KeyPositionBackspace) {
-                        state[-1] = 1;
-                    }
+                    character[11] = annotation.data;
                     break;
                 default:
                     assert(false);
                     break;
             }
 
-            auto res = PhaseResult::Make(states, state['a'] || state['b'] || state[-1]);
+            auto res = PhaseResult::Make(state, character[1] || character[2]);
             return res;
-            #undef DDD
         }
 
-        PhaseResult BackspacePhase::put(StateList states) {
-            states.pop_front();
-            if (states.size() == 0) {
-                return PhaseResult::Make(states, false);
-            } else {
-                auto& state = states.front();
-                if (state['c']) {
-                    auto pair = search_rule(FinalCompositionRules, state['c']);
-                    if (!pair.is_none) {
-                        state['c'] = pair.some[0];
-                    } else {
-                        state['c'] = 0;
-                    }
-                }
-                else if (state['b']) {
-                    auto pair = search_rule(VowelCompositionRules, state['b']);
-                    if (!pair.is_none) {
-                        state['b'] = pair.some[0];
-                    } else {
-                        if (state['a']) {
-                            state['b'] = 0;
-                        } else {
-                            states.pop_front();
-                        }
-                    }
-                }
-                else if (state['a']) {
-                    states.pop_front();
-                }
-                return PhaseResult::Make(states, true);
+        PhaseResult JasoCompositionPhase::put(State& state) {
+            auto characters = state.array(0x1000);
+            if (characters.size() < 2) {
+                return PhaseResult::Make(state, true);
             }
-        }
 
-        PhaseResult JasoCompositionPhase::put(StateList states) {
-            if (states.size() == 1) {
-                return PhaseResult::Make(states, true);
-            }
-            auto iter = states.begin();
-            auto& state = *iter;
-            iter++;
-            auto& secondary = *iter;
+            auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
+            auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+
             bool combined = false;
-            if (state['a'] && secondary['c']) {
-                auto c1 = secondary['c'];
-                auto c2 = state['a'];
-                auto composed = search_rule(FinalCompositionRules, c1, c2);
+            if (c1[1] && c2[3]) {
+                auto j1 = c2[3];
+                auto j2 = c1[1];
+                auto composed = search_rule(FinalCompositionRules, j1, j2);
                 if (!composed.is_none) {
-                    secondary['c'] = composed.some;
+                    c2[3] = composed.some;
                     combined = true;
                 }
             }
-            else if (!secondary['c'] && state['b'] && secondary['b']) {
-                auto c1 = secondary['b'];
-                auto c2 = state['b'];
-                auto composed = search_rule(VowelCompositionRules, c1, c2);
+            else if (!c2[3] && c1[2] && c2[2]) {
+                auto j1 = c2[2];
+                auto j2 = c1[2];
+                auto composed = search_rule(VowelCompositionRules, j1, j2);
                 if (!composed.is_none) {
-                    secondary['b'] = composed.some;
+                    c2[2] = composed.some;
                     combined = true;
                 }
             }
-            else if (secondary['a'] && !secondary['b'] && !secondary['c'] && state['a']) {
-                auto c1 = secondary['a'];
-                auto c2 = state['a'];
-                auto composed = search_rule(InitialCompositionRules, c1, c2);
+            else if (c2[1] && !c2[2] && !c2[3] && c1[1]) {
+                auto j1 = c2[1];
+                auto j2 = c1[1];
+                auto composed = search_rule(InitialCompositionRules, j1, j2);
                 if (!composed.is_none) {
-                    secondary['a'] = composed.some;
+                    c2[1] = composed.some;
                     combined = true;
                 }
             }
             if (combined) {
-                states.erase(states.cbegin());
-                return PhaseResult::Make(states, false);
+                characters.pop_back();
+                return PhaseResult::Make(state, false);
             }
-            return PhaseResult::Make(states, true);
+            return PhaseResult::Make(state, true);
         }
 
-        PhaseResult AnnotationToCombinationPhase::put(StateList states) {
-            auto iter = states.begin();
-            auto& state = states.front();
-            if (!state['a'] && !state['b'] && !state['c']) {
-                return PhaseResult::Make(states, true);
+        PhaseResult AnnotationToCombinationPhase::put(State& state) {
+            auto characters = state.array(0x1000);
+            auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
+            if (!c1[1] && !c1[2] && !c1[3]) {
+                return PhaseResult::Make(state, true);
             }
-            if (states.size() == 1) {
-                return PhaseResult::Make(states, false);
+
+            if (characters.size() < 2) {
+                return PhaseResult::Make(state, false);
             }
-            iter++;
-            auto& secondary = *iter;
-            if (state['a']) {
-                if (secondary['a'] && secondary['b'] && !secondary['c']) {
-                    secondary['c'] = state['a'];
-                    states.erase(states.cbegin());
-                    return PhaseResult::Make(states, true);
+
+            auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+            if (c1[1] && c1[2]) {
+
+            }
+            else if (c1[1]) {
+                if (c2[1] && c2[2] && !c2[3]) {
+                    c2[3] = c1[1];
+                    characters.pop_back();
+                    return PhaseResult::Make(state, true);
                 }
                 else {
-                    return PhaseResult::Make(states, true);
+                    return PhaseResult::Make(state, true);
                 }
             }
-            else if (state['b']) {
-                if (secondary['a'] && !secondary['b']) {
-                    secondary['b'] = state['b'];
-                    states.erase(states.cbegin());
-                    return PhaseResult::Make(states, true);
+            else if (c1[2]) {
+                if (c2[1] && !c2[2]) {
+                    c2[2] = c1[2];
+                    characters.pop_back();
+                    return PhaseResult::Make(state, true);
                 }
                 else {
-                    return PhaseResult::Make(states, true);
+                    return PhaseResult::Make(state, true);
                 }
             }
             else {
                 assert(false);
             }
-            return PhaseResult::Make(states, true);
+            return PhaseResult::Make(state, true);
         }
 
-        PhaseResult ConsonantDecompositionPhase::put(StateList states) {
-            if (states.size() < 2) {
-                return PhaseResult::Make(states, true);
+        PhaseResult ConsonantDecompositionPhase::put(State& state) {
+            auto strokes = state.array(0x1000);
+            if (strokes.size() < 2) {
+                return PhaseResult::Make(state, true);
             }
-            auto iter = states.begin();
-            auto& state = states.front();
-            iter++;
-            auto& secondary = *iter;
-            auto c = secondary['c'];
-            if (state['b'] && !state['a'] && c) {
+
+            auto c1 = state.array(0x1000 + (strokes.size() - 0) * 0x10);
+            auto c2 = state.array(0x1000 + (strokes.size() - 1) * 0x10);
+
+            auto c = c2[3];
+            if (c1[2] && !c1[1] && c) {
+                auto strokes = state.array(0x2000);
+                auto s2 = strokes[-2];
                 bool decomposed = false;
                 for (auto& rule: FinalCompositionRules) {
-                    if (c == rule[2]) {
-                        secondary['c'] = rule[0];
-                        state['a'] = rule[1];
+                    if (c == rule[2] && rule[1] == s2) {
+                        c2[3] = rule[0];
+                        c1[1] = rule[1];
                         decomposed = true;
                         break;
                     }
                 }
                 if (!decomposed) {
-                    state['a'] = c;
-                    secondary['c'] = 0;
+                    c1[1] = c;
+                    c2[3] = 0;
                 }
-                return PhaseResult::Make(states, true);
+                return PhaseResult::Make(state, true);
             }
-            return PhaseResult::Make(states, true);
+            return PhaseResult::Make(state, true);
         }
 
-        FromQwertyPhase::FromQwertyPhase() : CombinedPhase() {
+        FromQwertyHandler::FromQwertyHandler(hangeul::Combinator *combinator) : CombinedPhase() {
             this->phases.push_back((Phase *)new QwertyToKeyStrokePhase());
-            this->phases.push_back((Phase *)new KeyStrokeToAnnotationPhase());
-
-            auto branch = new BranchPhase();
-            this->phases.push_back(branch);
-
-            {
-                auto hangul_phase = new CombinedPhase();
-                hangul_phase->phases.push_back((Phase *)new JasoCompositionPhase());
-                hangul_phase->phases.push_back((Phase *)new AnnotationToCombinationPhase());
-                hangul_phase->phases.push_back((Phase *)new ConsonantDecompositionPhase());
-
-                auto success_phase = new SuccessPhase(hangul_phase);
-                branch->phases.push_back(success_phase);
-            }
-
-            {
-                auto backspace = new BackspacePhase();
-                branch->phases.push_back(backspace);
-            }
+            this->phases.push_back((Phase *)new KeyStrokeStackPhase());
+            this->phases.push_back((Phase *)new UnstrokeBackspacePhase());
+            this->phases.push_back((Phase *)new CombinatorPhase((Phase *)combinator, false));
         }
+
+//        FromQwertyHandler::~FromQwertyHandler() {
+//            this->phases.pop_back();
+//            MultiplePhase::~MultiplePhase();
+//        }
+
+        Combinator::Combinator() : hangeul::Combinator() {
+            this->phases.push_back((Phase *)new AnnotationPhase());
+
+            auto hangul_phase = new CombinedPhase();
+            hangul_phase->phases.push_back((Phase *)new JasoCompositionPhase());
+            hangul_phase->phases.push_back((Phase *)new AnnotationToCombinationPhase());
+            hangul_phase->phases.push_back((Phase *)new ConsonantDecompositionPhase());
+
+            auto success_phase = new SuccessPhase(hangul_phase);
+            this->phases.push_back(success_phase);
+        }
+
     }
 
     namespace Danmoum {
-        PhaseResult JasoCompositionPhase::put(StateList states) {
-            if (states.size() == 1) {
-                return PhaseResult::Make(states, true);
+        PhaseResult JasoCompositionPhase::put(State& state) {
+            auto characters = state.array(0x1000);
+            if (characters.size() < 2) {
+                return PhaseResult::Make(state, true);
             }
-            auto iter = states.begin();
-            auto& state = *iter;
-            iter++;
-            auto& secondary = *iter;
+
+            auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
+            auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+
             bool combined = false;
-            if (state['a'] && secondary['c']) {
-                auto c1 = secondary['c'];
-                auto c2 = state['a'];
-                auto composed = search_rule(KSX5002::FinalCompositionRules, c1, c2);
+            if (c1[1] && c2[3]) {
+                auto j1 = c2[3];
+                auto j2 = c1[1];
+                auto composed = search_rule(KSX5002::FinalCompositionRules, j1, j2);
                 if (!composed.is_none) {
-                    secondary['c'] = composed.some;
+                    c2[3] = composed.some;
                     combined = true;
                 }
             }
-            else if (!secondary['c'] && state['b'] && secondary['b']) {
-                auto c1 = secondary['b'];
-                auto c2 = state['b'];
-                auto composed = search_rule(VowelCompositionRules, c1, c2);
+            else if (!c2[3] && c1[2] && c2[2]) {
+                auto j1 = c2[2];
+                auto j2 = c1[2];
+                auto composed = search_rule(VowelCompositionRules, j1, j2);
                 if (!composed.is_none) {
-                    secondary['b'] = composed.some;
+                    c2[2] = composed.some;
                     combined = true;
                 }
             }
-            else if (secondary['a'] && !secondary['b'] && !secondary['c'] && state['a']) {
-                auto c1 = secondary['a'];
-                auto c2 = state['a'];
-                auto composed = search_rule(KSX5002::InitialCompositionRules, c1, c2);
+            else if (c2[1] && !c2[2] && !c2[3] && c1[1]) {
+                auto j1 = c2[1];
+                auto j2 = c1[1];
+                auto composed = search_rule(KSX5002::InitialCompositionRules, j1, j2);
                 if (!composed.is_none) {
-                    secondary['a'] = composed.some;
+                    c2[1] = composed.some;
                     combined = true;
                 }
             }
             if (combined) {
-                states.erase(states.cbegin());
-                return PhaseResult::Make(states, false);
+                characters.pop_back();
+                return PhaseResult::Make(state, true);
             }
-            return PhaseResult::Make(states, true);
+            return PhaseResult::Make(state, true);
         }
 
-        FromQwertyPhase::FromQwertyPhase() : CombinedPhase() {
+        FromQwertyHandler::FromQwertyHandler(hangeul::Combinator *combinator) : CombinedPhase() {
             this->phases.push_back((Phase *)new QwertyToKeyStrokePhase());
-            this->phases.push_back((Phase *)new KSX5002::KeyStrokeToAnnotationPhase());
+            this->phases.push_back((Phase *)new KeyStrokeStackPhase());
+            this->phases.push_back((Phase *)new UnstrokeBackspacePhase());
+            this->phases.push_back((Phase *)new CombinatorPhase((Phase *)combinator, false));
+        }
 
-            auto branch = new BranchPhase();
-            this->phases.push_back(branch);
+        Combinator::Combinator() : hangeul::Combinator() {
+            this->phases.push_back((Phase *)new KSX5002::AnnotationPhase());
 
-            {
-                auto hangul_phase = new CombinedPhase();
-                hangul_phase->phases.push_back((Phase *)new JasoCompositionPhase());
-                hangul_phase->phases.push_back((Phase *)new KSX5002::AnnotationToCombinationPhase());
-                hangul_phase->phases.push_back((Phase *)new KSX5002::ConsonantDecompositionPhase());
+            auto hangul_phase = new CombinedPhase();
+            hangul_phase->phases.push_back((Phase *)new JasoCompositionPhase());
+            hangul_phase->phases.push_back((Phase *)new KSX5002::AnnotationToCombinationPhase());
+            hangul_phase->phases.push_back((Phase *)new KSX5002::ConsonantDecompositionPhase());
 
-                auto success_phase = new SuccessPhase(hangul_phase);
-                branch->phases.push_back(success_phase);
-            }
-
-            {
-                auto backspace = new KSX5002::BackspacePhase();
-                branch->phases.push_back(backspace);
-            }
+            auto success_phase = new SuccessPhase(hangul_phase);
+            this->phases.push_back(success_phase);
         }
     }
 }

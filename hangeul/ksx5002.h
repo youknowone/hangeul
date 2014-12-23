@@ -50,6 +50,8 @@ namespace KSX5002 {
         R(R, P, RP),
         R(R, H, RH),
         R(B, S, BS),
+        R(G, G, GG),
+        R(S, S, SS),
         {0, 0, 0},
         #undef R
     };
@@ -72,37 +74,43 @@ namespace KSX5002 {
         uint32_t data;
     };
 
-    class Decoder: public hangeul::Decoder {
+    class FromQwertyHandler: public CombinedPhase {
     public:
-        virtual UnicodeVector decode(State state);
+        static std::string InputType() { assert(false); return "inputsource-qwerty"; }
+        static std::string OutputType() { assert(false); return "combination-ksx5002"; }
+
+        FromQwertyHandler(Combinator *combinator);
+        //virtual ~FromQwertyHandler();
+    };
+
+    class Decoder: public hangeul::Decoder {
+        Combinator *combinator = nullptr;
+    public:
+        Decoder(Combinator *combinator) { this->combinator = combinator; } // is copying ok?
+        virtual State combined(State& state);
+        virtual UnicodeVector decode(State::ArrayProxy& stroke);
+        virtual UnicodeVector commited(State& state);
+        virtual UnicodeVector composed(State& state);
     };
 
     class Layout {
     public:
-        Annotation translate(KeyStroke stroke, StateList states);
+        Annotation translate(State& state);
         Unicode label(Annotation annotation);
     };
 
     //! state[2]->state[0, 'a', 'b', 'c']
-    class KeyStrokeToAnnotationPhase: public AnnotationPhase {
+    class AnnotationPhase: public hangeul::ToAnnotationPhase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
 
         static std::string InputType() { assert(false); return "keyposition"; }
         static std::string OutputType() { assert(false); return "annotation-ksx5002"; }
     };
 
-    class BackspacePhase: public Phase {
-    public:
-        virtual PhaseResult put(StateList state);
-
-        static std::string InputType() { assert(false); return "annotation-ksx5002"; }
-        static std::string OutputType() { assert(false); return "combination-ksx5002"; }
-    };
-
     class JasoCompositionPhase: public Phase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
 
         static std::string InputType() { assert(false); return "annotation-ksx5002"; }
         static std::string OutputType() { assert(false); return "annotation-ksx5002"; }
@@ -110,7 +118,7 @@ namespace KSX5002 {
 
     class AnnotationToCombinationPhase: public Phase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
 
         static std::string InputType() { assert(false); return "annotation-ksx5002"; }
         static std::string OutputType() { assert(false); return "combination-ksx5002"; }
@@ -118,21 +126,21 @@ namespace KSX5002 {
 
     class ConsonantDecompositionPhase: public Phase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
 
         static std::string InputType() { assert(false); return "combination-ksx5002"; }
         static std::string OutputType() { assert(false); return "combination-ksx5002"; }
     };
 
-    class FromQwertyPhase: public CombinedPhase {
+    class Combinator: public hangeul::Combinator {
     public:
         static std::string InputType() { assert(false); return "inputsource-qwerty"; }
         static std::string OutputType() { assert(false); return "combination-ksx5002"; }
 
-        FromQwertyPhase();
+        Combinator();
     };
-
 }
+
 namespace Danmoum {
     const CompositionRule VowelCompositionRules[] = {
         #define R(A, B, X) {Vowel::A, Vowel::B, Vowel::X}
@@ -155,18 +163,27 @@ namespace Danmoum {
 
     class JasoCompositionPhase: public Phase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
 
         static std::string InputType() { assert(false); return "annotation-ksx5002"; }
         static std::string OutputType() { assert(false); return "annotation-ksx5002"; }
     };
 
-    class FromQwertyPhase: public CombinedPhase {
+    class FromQwertyHandler: public CombinedPhase {
     public:
         static std::string InputType() { assert(false); return "inputsource-qwerty"; }
         static std::string OutputType() { assert(false); return "combination-ksx5002"; }
 
-        FromQwertyPhase();
+        FromQwertyHandler(hangeul::Combinator *combinator);
+        //virtual ~FromQwertyHandler();
+    };
+
+    class Combinator: public hangeul::Combinator {
+    public:
+        static std::string InputType() { assert(false); return "inputsource-qwerty"; }
+        static std::string OutputType() { assert(false); return "combination-ksx5002"; }
+
+        Combinator();
     };
 }
 

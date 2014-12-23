@@ -42,40 +42,59 @@ namespace hangeul {
         return Optional<unsigned>::None();
     }
 
-    PhaseResult Phase::put_state(StateList states, State new_state) {
-        states.push_front(new_state);
-        return this->put(states);
-    }
-
-    PhaseResult CombinedPhase::put(StateList states) {
+    PhaseResult CombinedPhase::put(State& state) {
         PhaseResult result = PhaseResult::Stop();
         for (auto& phase: this->phases) {
-            result = phase->put(states);
+            result = phase->put(state);
             if (!result.processed) {
                 break;
             }
-            states = result.states;
         }
         return result;
     }
 
-    PhaseResult PostProcessPhase::put(StateList states) {
+    PhaseResult PostProcessPhase::put(State& state) {
         for (auto& phase: this->phases) {
-            auto result = phase->put(states);
-            states = result.states;
+            auto result = phase->put(state);
+            state = result.state;
         }
-        return PhaseResult::Make(states, true);
+        return PhaseResult::Make(state, true);
     }
 
-    PhaseResult BranchPhase::put(StateList states) {
-        auto branch = states.front()[-1];
-        return this->phases[branch]->put(states);
+    PhaseResult BranchPhase::put(State& state) {
+        auto branch = state[-1];
+        return this->phases[branch]->put(state);
+    }
+
+    PhaseResult KeyStrokeStackPhase::put(State& state) {
+        auto strokes = state.array(STROKES_IDX);
+        auto stroke = state.latestKeyStroke();
+        strokes.push_back(stroke);
+        dassert(strokes.back() == stroke);
+        return PhaseResult::Make(state, true);
+    }
+
+    PhaseResult UnstrokeBackspacePhase::put(State& state) {
+        auto strokes = state.array(STROKES_IDX);
+        if (strokes.size() == 0) {
+            return PhaseResult::Make(state, true); // do not need to unstroke anything
+        }
+        auto stroke = strokes.back();
+        if (stroke == 0x0e) {
+            strokes.pop_back();
+            if (strokes.size() > 0) {
+                strokes.pop_back();
+            } else {
+                return PhaseResult::Make(state, false);
+            }
+        }
+        return PhaseResult::Make(state, true);
     }
 
     #define N(V) KeyPosition(V)
     #define K(V) KeyPosition ## V
 
-    PhaseResult QwertyToKeyStrokePhase::put(StateList states) {
+    PhaseResult QwertyToKeyStrokePhase::put(State& state) {
         #define DDD 0
         #define S(V) KeyPosition(KeyPosition ## V + 0x20000)
         static KeyPosition map[] = {
@@ -105,19 +124,17 @@ namespace hangeul {
             K(X), K(Y), K(Z), S(BracketLeft), S(Backslash), S(BracketRight), S(Grave), K(Backspace),
         };
         #undef S
-        auto& state = states.front();
-        auto inputsource = state[1];
+        auto inputsource = state[-1];
         auto stroke = KeyStroke(map[inputsource]);
         dlog(DDD, "inputsource: %02x / stroke: %02x", inputsource, stroke);
-        state[2] = stroke;
-        dassert(states.front()[2] == stroke);
-        auto result = PhaseResult::Make(states, true);
-        dassert(result.states.front()[2] == stroke);
+        state[0] = stroke;
+        auto result = PhaseResult::Make(state, true);
+        dassert(result.state[0] == stroke);
         return result;
         #undef DDD
     }
     
-    PhaseResult MacKeycodeToKeyStrokePhase::put(StateList states) {
+    PhaseResult MacKeycodeToKeyStrokePhase::put(State& state) {
         static KeyPosition map[] = {
             // 35 7a 78 63 76 60 61 62 63 64 65 6d 67 6f 69 6b 71 6a 40 4f 50 5a
             // 32 12 13 14 15 17 16 1a 1c 19 1d 1b 18 2a 33(75)
@@ -142,11 +159,42 @@ namespace hangeul {
             N(0xff), K(F15), N(0xff), K(Home), K(PageUp), K(Delete), K(F4), K(End), // 0x70 ~ 0x77
             K(F2), K(PageDown), K(F1), K(Left), K(Right), K(Down), K(Up), N(0xff), // 0x78 ~ 0x7f
         };
-        auto& state = states.front();
-        auto input = state[1];
+        auto input = state[-1];
         KeyStroke stroke = 0xffff0000 & input + 0xff & map[input];
-        state[2] = stroke;
-        return PhaseResult::Make(states, true);
+        state[0] = stroke;
+        return PhaseResult::Make(state, true);
     }
 
+
+    PhaseResult CombinatorPhase::put(State& state) {
+        auto strokes = state.array(STROKES_IDX);
+        auto string = state.array(STRING_IDX);
+        string.erase(0, string.size());
+        assert(string.size() == 0);
+        State substate;
+        auto substrokes = substate.array(STROKES_IDX);
+        int boundary = 0;
+        auto result = PhaseResult::Stop();
+        for (int i = 0; i < strokes.size(); i++) {
+            auto stroke = strokes[i];
+            substrokes.push_back(stroke);
+            substate[0] = stroke;
+            result = phase->put(substate);
+            substate = result.state;
+            if (!result.processed) {
+                string.push_back(boundary);
+                auto charstrokes = state.array(STRING_IDX + string.size() * 0x100);
+                charstrokes.import(substrokes);
+                boundary += substrokes.size();
+                substate = State();
+                i = boundary - 1;
+            }
+        }
+        if (string.back() != boundary) {
+            string.push_back(boundary);
+            auto charstrokes = state.array(STRING_IDX + string.size() * 0x100);
+            charstrokes.import(substrokes);
+        }
+        return result;
+    }
 }

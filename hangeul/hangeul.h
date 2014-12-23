@@ -14,6 +14,8 @@
 #include <hangeul/context.h>
 
 #include <hangeul/ksx5002.h>
+#include <hangeul/tenkey.h>
+#include <hangeul/cheonjiin.h>
 
 #else
 

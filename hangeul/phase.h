@@ -16,6 +16,9 @@
 #include <hangeul/data.h>
 #include <hangeul/type.h>
 
+#define STROKES_IDX 0x10000
+#define STRING_IDX 0x20000
+
 namespace hangeul {
     extern State empty_state;
     typedef unsigned CompositionRule[3];
@@ -24,20 +27,19 @@ namespace hangeul {
     Optional<unsigned> search_rule(const CompositionRule *rules, unsigned input1, unsigned input2);
 
     struct PhaseResult {
-        StateList states;
+        State state;
         bool processed;
 
         static PhaseResult Stop() { PhaseResult result; result.processed = false; return result; }
-        static PhaseResult Make(StateList states, bool processed) {
-            PhaseResult res = { states, processed };
+        static PhaseResult Make(State state, bool processed) {
+            PhaseResult res = { state, processed };
             return res;
         }
     };
 
     class Phase { // abstract
     public:
-        virtual PhaseResult put(StateList states) = 0;
-        virtual PhaseResult put_state(StateList states, State new_state); 
+        virtual PhaseResult put(State& state) = 0;
 
         static std::string InputType() { assert(false); return ""; }
         static std::string OutputType() { assert(false); return ""; }
@@ -49,11 +51,11 @@ namespace hangeul {
     };
 
     class BypassPhase: public Phase {
-        virtual PhaseResult put(StateList states) { return PhaseResult::Make(states, true); }
+        virtual PhaseResult put(State& state) { return PhaseResult::Make(state, true); }
     };
 
     class BlockPhase: public Phase {
-        virtual PhaseResult put(StateList states) { return PhaseResult::Make(states, false); }
+        virtual PhaseResult put(State& state) { return PhaseResult::Make(state, false); }
     };
 
     class MultiplePhase: public Phase {
@@ -78,24 +80,24 @@ namespace hangeul {
 
     class CombinedPhase: public MultiplePhase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
     };
 
     //! try-failthen
     class FallbackPhase: public MultiplePhase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
     };
 
     //! try-finally
     class PostProcessPhase: public MultiplePhase {
     public:
-        virtual PhaseResult put(StateList states);
+        virtual PhaseResult put(State& state);
     };
 
     class BranchPhase: public MultiplePhase {
     public:
-        virtual PhaseResult put(StateList states);
+        virtual PhaseResult put(State& state);
     };
 
     class MetaPhase: public Phase {
@@ -119,43 +121,70 @@ namespace hangeul {
     class SuccessPhase: public MetaPhase {
     public:
         SuccessPhase(Phase *phase, bool needs_delete = true): MetaPhase(phase, needs_delete) { }
-        virtual PhaseResult put(StateList states) {
+        virtual PhaseResult put(State& state) {
             if (this->phase) {
-                auto result = this->phase->put(states);
-                states = result.states;
+                auto result = this->phase->put(state);
+                state = result.state;
             }
-            return PhaseResult::Make(states, true);
+            return PhaseResult::Make(state, true);
         }
     };
 
-    //! state[1]->state[1] 변환
+    //! state[0]->state[0] 변환
     class InputSourceTransformationPhase: public Phase { // abstract
-        //virtual PhaseResult put(StateList states) { return PhaseResult::Make(states, false); }
+        //virtual PhaseResult put(State& state) { return PhaseResult::Make(states, false); }
     };
 
-    //! state[1]->state[2] 변환
-    class KeyStrokePhase: public Phase { // abstract
+    //! state[0]->state[1] 변환
+    class ToKeyStrokePhase: public Phase { // abstract
+        static std::string OutputType() { return "keystroke"; }
+    };
+
+    class KeyStrokeStackPhase: public Phase {
+        virtual PhaseResult put(State& state);
+
+        static std::string InputType() { return "keystroke"; }
+        static std::string OutputType() { return "keystroke"; }
+    };
+
+    class UnstrokeBackspacePhase: public Phase {
+        virtual PhaseResult put(State& state);
+
+        static std::string InputType() { return "keystroke"; }
         static std::string OutputType() { return "keystroke"; }
     };
 
     //! state[2]->... 변환
-    class AnnotationPhase: public Phase { // abstract
+    class ToAnnotationPhase: public Phase { // abstract
     };
 
-    class QwertyToKeyStrokePhase: public KeyStrokePhase {
+    class QwertyToKeyStrokePhase: public ToKeyStrokePhase {
     public:
-        virtual PhaseResult put(StateList states);
+        virtual PhaseResult put(State& state);
 
         static std::string InputType() { return "inputsource-qwerty"; }
     };
 
-    class MacKeycodeToKeyStrokePhase: public KeyStrokePhase {
+    class MacKeycodeToKeyStrokePhase: public ToKeyStrokePhase {
     public:
-        virtual PhaseResult put(StateList state);
+        virtual PhaseResult put(State& state);
 
         static std::string InputType() { return "inputsource-keycode-mac"; }
     };
 
+    class Combinator: public CombinedPhase {
+    public:
+        static std::string InputType() { assert(false); return "keystroke"; }
+        static std::string OutputType() { assert(false); return "combination"; }
+    };
+
+    class CombinatorPhase: public MetaPhase {
+    public:
+        CombinatorPhase(Phase *phase, bool needs_delete = true) : MetaPhase(phase, needs_delete) { }
+        virtual PhaseResult put(State& state);
+        static std::string InputType() { assert(false); return "keystroke"; }
+        static std::string OutputType() { assert(false); return "combination"; }
+    };
 }
 
 #endif
