@@ -87,6 +87,15 @@ namespace hangeul {
         KeyStroke latestKeyStroke() {
             return (*this)[0];
         }
+        #if DEBUG
+        void _debug() {
+            printf("-- debug info --\n");
+            for (auto& it: *this) {
+                printf("%lx(%ld): %lx(%ld)\n", it.first, it.first, it.second, it.second);
+            }
+            printf("-- end of info --\n");
+        }
+        #endif
     };
 
     enum KeyPosition { // platform independent position

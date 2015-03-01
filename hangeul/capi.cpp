@@ -165,6 +165,44 @@ Decoder *cheonjiin_decoder() {
     return obj;
 }
 
+Phase *alphabet_from_tenkey_handler() {
+    static hangeul::Phase *obj = nullptr;
+    static hangeul::Tenkey::Decoder *decoder = nullptr;
+    if (obj == nullptr) {
+        decoder = new hangeul::TableTenkey::Decoder(&hangeul::TableTenkey::AlphabetMap);
+        obj = new hangeul::TableTenkey::FromTenkeyHandler();
+    }
+    return obj;
+}
+
+
+Decoder *alphabet_tenkey_decoder() {
+    static hangeul::Decoder *obj = nullptr;
+    if (obj == nullptr) {
+        obj = new hangeul::TableTenkey::Decoder(&hangeul::TableTenkey::AlphabetMap);
+    }
+    return obj;
+}
+
+Phase *number_from_tenkey_handler() {
+    static hangeul::Phase *obj = nullptr;
+    static hangeul::Tenkey::Decoder *decoder = nullptr;
+    if (obj == nullptr) {
+        decoder = new hangeul::TableTenkey::Decoder(&hangeul::TableTenkey::NumberMap);
+        obj = new hangeul::TableTenkey::FromTenkeyHandler();
+    }
+    return obj;
+}
+
+
+Decoder *number_tenkey_decoder() {
+    static hangeul::Decoder *obj = nullptr;
+    if (obj == nullptr) {
+        obj = new hangeul::TableTenkey::Decoder(&hangeul::TableTenkey::NumberMap);
+    }
+    return obj;
+}
+
 uint32_t ksx5002_label(char key) {
     static hangeul::QwertyToKeyStrokePhase stroke_phase;
     static hangeul::KSX5002::Layout layout;

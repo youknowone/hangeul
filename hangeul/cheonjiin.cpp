@@ -56,6 +56,10 @@ namespace Cheonjiin {
                 else {
                     dassert(false);
                 }
+                if (c != Consonant::None) {
+                    auto v = 0x3131 + c - 1;
+                    unicodes.push_back(v);
+                }
             }
         }
         else if (stroke[1] && !stroke[2]) {
@@ -103,8 +107,8 @@ namespace Cheonjiin {
         return unicodes;
     }
 
-    static Tenkey::Annotation AnnotationMap[][13] = {
-        #define P(C) { Tenkey::AnnotationClass::Punctuation, C }
+    static TableTenkey::Table AnnotationMap = {
+        #define S(C) { Tenkey::AnnotationClass::Symbol, C }
         #define F(C) { Tenkey::AnnotationClass::Function, KeyPosition ## C }
         #define C(C) { Tenkey::AnnotationClass::Consonant, Consonant:: C }
         #define V(C) { Tenkey::AnnotationClass::Vowel, Vowel:: C }
@@ -113,29 +117,29 @@ namespace Cheonjiin {
             V(I), V(Ao), V(Eu),
             C(G), C(N), C(D),
             C(B), C(S), C(J),
-            F(Right), C(NG), P('.'),
-            P(' '),
+            F(Right), C(NG), S('.'),
+            S(' '),
         },
         {
             V(I), V(Yao), V(Eu),
             C(K), C(R), C(T),
             C(P), C(H), C(CH),
-            F(Right), C(M), P(','),
-            P(' '),
+            F(Right), C(M), S(','),
+            S(' '),
         },
         {
             V(I), V(Ao), V(Eu),
             C(GG), C(N), C(DD),
             C(BB), C(SS), C(JJ),
-            F(Right), C(NG), P('?'),
-            P(' '),
+            F(Right), C(NG), S('?'),
+            S(' '),
         },
         {
             V(I), V(Ao), V(Eu),
             C(G), C(N), C(D),
             C(B), C(S), C(J),
-            F(Right), C(NG), P('!'),
-            P(' '),
+            F(Right), C(NG), S('!'),
+            S(' '),
         },
         #undef A
         #undef F
@@ -189,7 +193,7 @@ namespace Cheonjiin {
                 return 0x3131 + annotation.data - 1;
             case Tenkey::AnnotationClass::Vowel:
                 return 0x314f + annotation.data - 1;
-            case Tenkey::AnnotationClass::Punctuation:
+            case Tenkey::AnnotationClass::Symbol:
                 return annotation.data;
             case Tenkey::AnnotationClass::Function:
                 return 'X';
@@ -222,7 +226,7 @@ namespace Cheonjiin {
             case Tenkey::AnnotationClass::Vowel:
                 character[2] = annotation.data;
                 break;
-            case Tenkey::AnnotationClass::Punctuation:
+            case Tenkey::AnnotationClass::Symbol:
                 character[10] = annotation.data;
                 break;
             case Tenkey::AnnotationClass::Function:

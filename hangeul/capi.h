@@ -62,9 +62,14 @@ Decoder *ksx5002_decoder();
 Phase *danmoum_combinator();
 Phase *danmoum_from_qwerty_handler();
 Decoder *danmoum_decoder();
+
 Phase *cheonjiin_from_tenkey_handler();
 Phase *cheonjiin_combinator();
 Decoder *cheonjiin_decoder();
+Phase *alphabet_from_tenkey_handler();
+Phase *number_from_tenkey_handler();
+Decoder *alphabet_tenkey_decoder();
+Decoder *number_tenkey_decoder();
 
 
 uint32_t ksx5002_label(char key);

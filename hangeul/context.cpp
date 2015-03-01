@@ -37,7 +37,7 @@ namespace hangeul {
     }
 
     UnicodeVector Context::composed() {
-
+        //this->_state._debug();
         return this->decoder().composed(this->_state);
     }
 
