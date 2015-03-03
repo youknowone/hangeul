@@ -21,8 +21,8 @@ namespace Tenkey {
         //state._debug();
         State cstate = this->combined(state);
         auto string = cstate.array(STRING_IDX);
-        for (int i = 0; i < string.size(); i++) {
-            unicodes.push_back(string[i]);
+        for (auto& character: string) {
+            unicodes.push_back(character);
         }
         return unicodes;
     }

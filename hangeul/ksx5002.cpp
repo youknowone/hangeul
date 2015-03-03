@@ -15,8 +15,7 @@ namespace hangeul {
         State Decoder::combined(State& state) {
             auto rstate = State();
             auto strokes = state.array(STROKES_IDX);
-            for (int i = 0; i < strokes.size(); i++) {
-                auto stroke = strokes[i];
+            for (auto& stroke: strokes) {
                 rstate[0] = stroke;
                 auto result = this->combinator->put(rstate);
                 rstate = result.state;

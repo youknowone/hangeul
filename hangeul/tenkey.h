@@ -77,8 +77,7 @@ namespace TableTenkey {
             auto rstate = State();
             auto strokes = state.array(STROKES_IDX);
             auto string = rstate.array(STRING_IDX);
-            for (int i = 0; i < strokes.size(); i++) {
-                auto stroke = strokes[i];
+            for (auto& stroke: strokes) {
                 auto character = this->decode(stroke);
                 string.push_back(character);
             }

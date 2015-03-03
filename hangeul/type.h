@@ -32,6 +32,18 @@ namespace hangeul {
                 (*this->owner)[this->head - 1] = (int32_t)size;
             }
         public:
+            class Iterator: public std::iterator<std::bidirectional_iterator_tag, uint32_t> {
+                ArrayProxy *_array;
+                int32_t _idx;
+            public:
+                Iterator(ArrayProxy *array, int32_t idx): _array(array), _idx(idx) {}
+                Iterator(const Iterator& it) : _array(it._array), _idx(it._idx) {}
+                Iterator& operator++() { ++_idx; return *this; }
+                Iterator operator++(int) { Iterator tmp(*this); operator++(); return tmp; }
+                bool operator==(const Iterator& rhs) { return _array == rhs._array && _idx == rhs._idx; }
+                bool operator!=(const Iterator& rhs) { return _array != rhs._array || _idx != rhs._idx; }
+                int& operator*() { return (*_array)[_idx]; }
+            };
             ArrayProxy(State *owner, int32_t head, ssize_t maximum_size = -1) {
                 this->owner = owner;
                 this->head = head;
@@ -47,6 +59,12 @@ namespace hangeul {
                 } else {
                     return (*this->owner)[(int32_t)(this->head + this->size() + subscript)];
                 }
+            }
+            Iterator begin() {
+                return Iterator(this, 0);
+            }
+            Iterator end() {
+                return Iterator(this, this->size());
             }
             int32_t& back() {
                 auto size = this->size();

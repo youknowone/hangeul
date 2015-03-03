@@ -15,8 +15,7 @@ namespace Cheonjiin {
     State Decoder::combined(State& state) {
         auto rstate = State();
         auto strokes = state.array(STROKES_IDX);
-        for (int i = 0; i < strokes.size(); i++) {
-            auto stroke = strokes[i];
+        for (auto& stroke: strokes) {
             rstate[0] = stroke;
             auto result = this->combinator->put(rstate);
             rstate = result.state;
@@ -24,7 +23,6 @@ namespace Cheonjiin {
                 //assert(false);
                 //break;
             }
-            //for (auto it: charstate) { dlog(1, "k:%d / v:%d", it.first, it.second); }
         }
         return rstate;
     }
