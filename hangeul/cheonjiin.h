@@ -96,20 +96,6 @@ namespace Cheonjiin {
         #undef R
     };
 
-    class MergeStrokesPhase: public Phase {
-        virtual PhaseResult put(State& state);
-
-        static std::string InputType() { return "keystroke"; }
-        static std::string OutputType() { return "keystroke"; }
-    };
-
-    class UnstrokeBackspacePhase: public Phase {
-        virtual PhaseResult put(State& state);
-
-        static std::string InputType() { return "keystroke"; }
-        static std::string OutputType() { return "keystroke"; }
-    };
-
     class FromTenkeyHandler: public CombinedPhase {
     public:
         static std::string InputType() { assert(false); return "inputsource-tenkey"; }
@@ -176,6 +162,7 @@ namespace Cheonjiin {
         Combinator();
     };
 
+    extern TableTenkey::Table CheonjiinMap;
 } }
 
 #endif /* defined(__hangeul__cheonjiin__) */

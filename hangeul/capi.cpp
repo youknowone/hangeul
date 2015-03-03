@@ -170,7 +170,7 @@ Phase *alphabet_from_tenkey_handler() {
     static hangeul::Tenkey::Decoder *decoder = nullptr;
     if (obj == nullptr) {
         decoder = new hangeul::TableTenkey::Decoder(&hangeul::TableTenkey::AlphabetMap);
-        obj = new hangeul::TableTenkey::FromTenkeyHandler();
+        obj = new hangeul::TableTenkey::FromTenkeyHandler(&hangeul::TableTenkey::AlphabetMap);
     }
     return obj;
 }
@@ -189,7 +189,7 @@ Phase *number_from_tenkey_handler() {
     static hangeul::Tenkey::Decoder *decoder = nullptr;
     if (obj == nullptr) {
         decoder = new hangeul::TableTenkey::Decoder(&hangeul::TableTenkey::NumberMap);
-        obj = new hangeul::TableTenkey::FromTenkeyHandler();
+        obj = new hangeul::TableTenkey::FromTenkeyHandler(&hangeul::TableTenkey::AlphabetMap);
     }
     return obj;
 }

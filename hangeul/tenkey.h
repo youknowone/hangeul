@@ -17,18 +17,35 @@
 namespace hangeul {
 
 namespace Tenkey {
-    namespace AnnotationClass {
+    struct Annotation {
         enum Type {
+            Function,
             Consonant,
             Vowel,
             Symbol,
-            Function,
         };
-    }
 
-    struct Annotation {
-        AnnotationClass::Type type;
+        Type type;
         uint32_t data;
+
+        bool operator==(Annotation& rhs) { return this->type == rhs.type && this->data == rhs.data; }
+        bool operator!=(Annotation& rhs) { return !operator!=(rhs); }
+
+        static Annotation None;
+    };
+    struct Stroke {
+        union {
+            uint16_t value;
+            struct {
+                uint8_t code;
+                uint8_t phase;
+            };
+        };
+        Stroke(uint16_t value): value(value) {}
+        Stroke(uint8_t phase, uint8_t code): phase(phase), code(code) {}
+        bool operator==(Stroke& rhs) { return this->value == rhs.value; }
+        bool operator!=(Stroke& rhs) { return !operator==(rhs); }
+
     };
 
     class Decoder: public hangeul::Decoder {
@@ -38,8 +55,6 @@ namespace Tenkey {
         virtual UnicodeVector commited(State& state);
         virtual UnicodeVector composed(State& state);
     };
-
-
 
     class Layout {
     public:
@@ -87,12 +102,16 @@ namespace TableTenkey {
             auto level = stroke >> 8;
             auto position = stroke & 0xff;
             auto annotation = (*this->_table)[level][position];
-            assert(annotation.type == Tenkey::AnnotationClass::Symbol);
+            assert(annotation.type == Tenkey::Annotation::Symbol);
             return annotation.data;
         }
     };
 
     class MergeStrokesPhase: public Phase {
+        Table *_table;
+    public:
+        MergeStrokesPhase(Table *table): _table(table) {}
+
         virtual PhaseResult put(State& state);
 
         static std::string InputType() { return "keystroke"; }
@@ -100,6 +119,9 @@ namespace TableTenkey {
     };
 
     class UnstrokeBackspacePhase: public Phase {
+        Table *_table;
+    public:
+        UnstrokeBackspacePhase(Table *table): _table(table) {}
         virtual PhaseResult put(State& state);
 
         static std::string InputType() { return "keystroke"; }
@@ -111,7 +133,7 @@ namespace TableTenkey {
         static std::string InputType() { assert(false); return "inputsource-tenkey"; }
         static std::string OutputType() { assert(false); return "combination-ksx5002"; }
 
-        FromTenkeyHandler();
+        FromTenkeyHandler(Table *table);
         //virtual ~FromTenkeyHandler();
     };
 

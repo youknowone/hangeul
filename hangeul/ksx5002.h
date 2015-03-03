@@ -16,16 +16,6 @@
 
 namespace hangeul {
 namespace KSX5002 {
-
-    namespace AnnotationClass {
-        enum Type {
-            ASCII,
-            Function,
-            Consonant,
-            Vowel,
-        };
-    }
-
     const CompositionRule InitialCompositionRules[] = {
         #define R(A, B, X) {Consonant::A, Consonant::B, Consonant::X}
         R(G, G, GG),
@@ -70,7 +60,13 @@ namespace KSX5002 {
     };
 
     struct Annotation {
-        AnnotationClass::Type type;
+        enum Type {
+            Function,
+            ASCII,
+            Consonant,
+            Vowel,
+        };
+        Annotation::Type type;
         uint32_t data;
     };
 

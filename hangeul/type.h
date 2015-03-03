@@ -40,6 +40,8 @@ namespace hangeul {
                 Iterator(const Iterator& it) : _array(it._array), _idx(it._idx) {}
                 Iterator& operator++() { ++_idx; return *this; }
                 Iterator operator++(int) { Iterator tmp(*this); operator++(); return tmp; }
+                Iterator& operator--() { --_idx; return *this; }
+                Iterator operator--(int) { Iterator tmp(*this); operator--(); return tmp; }
                 bool operator==(const Iterator& rhs) { return _array == rhs._array && _idx == rhs._idx; }
                 bool operator!=(const Iterator& rhs) { return _array != rhs._array || _idx != rhs._idx; }
                 int& operator*() { return (*_array)[_idx]; }

@@ -87,11 +87,11 @@ namespace hangeul {
         }
 
         Annotation Layout::translate(State& state) {
-            #define A(C) { AnnotationClass::ASCII, C }
-            #define F(C) { AnnotationClass::Function, KeyPosition ## C }
-            #define C(C) { AnnotationClass::Consonant, Consonant:: C }
-            #define V(C) { AnnotationClass::Vowel, Vowel:: C }
-            #define E() { AnnotationClass::Function, 0 }
+            #define A(C) { Annotation::ASCII, C }
+            #define F(C) { Annotation::Function, KeyPosition ## C }
+            #define C(C) { Annotation::Consonant, Consonant:: C }
+            #define V(C) { Annotation::Vowel, Vowel:: C }
+            #define E() { Annotation::Function, 0 }
 
             static Annotation map1[] = {
                 A('`'), A('1'), A('2'), A('3'), A('4'), A('5'), A('6'), A('7'), A('8'), A('9'), A('0'), A('-'), A('='), A('\\'), F(Backspace),  E(),
@@ -128,13 +128,13 @@ namespace hangeul {
 
         Unicode Layout::label(Annotation annotation) {
             switch (annotation.type) {
-                case AnnotationClass::Consonant:
+                case Annotation::Consonant:
                     return 0x3131 + annotation.data - 1;
-                case AnnotationClass::Vowel:
+                case Annotation::Vowel:
                     return 0x314f + annotation.data - 1;
-                case AnnotationClass::ASCII:
+                case Annotation::ASCII:
                     return annotation.data;
-                case AnnotationClass::Function:
+                case Annotation::Function:
                     return 'X';
                 default:
                     assert(false);
@@ -159,16 +159,16 @@ namespace hangeul {
             character[10] = 0;
             character[11] = 0;
             switch (annotation.type) {
-                case AnnotationClass::Consonant:
+                case Annotation::Consonant:
                     character[1] = annotation.data;
                     break;
-                case AnnotationClass::Vowel:
+                case Annotation::Vowel:
                     character[2] = annotation.data;
                     break;
-                case AnnotationClass::ASCII:
+                case Annotation::ASCII:
                     character[10] = annotation.data;
                     break;
-                case AnnotationClass::Function:
+                case Annotation::Function:
                     character[11] = annotation.data;
                     break;
                 default:
