@@ -35,6 +35,7 @@ void statelist_append(StateList *states, State *state);
 UnicodeVector *unicodevector_create();
 void unicodevector_free(UnicodeVector *unicodes);
 size_t unicodevector_size(UnicodeVector *unicodes);
+void unicodevector_append(UnicodeVector *unicodes, Unicode unicode);
 Unicode unicodevector_get(UnicodeVector *unicodes, size_t index);
 
 PhaseResult *phaseresult_create();
@@ -53,6 +54,8 @@ void context_flush(Context *context);
 void context_truncate(Context *context);
 void context_get_commited(Context *context, UnicodeVector *buffer);
 void context_get_composed(Context *context, UnicodeVector *buffer);
+
+void nfc_to_nfd(UnicodeVector *nfc, UnicodeVector *nfd);
 
 Phase *bypass_phase();
 Decoder *bypass_decoder();

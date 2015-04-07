@@ -33,8 +33,8 @@ namespace hangeul {
             P = 18,
             H = 19,
         };
-        extern Initial::Type FromConsonant[31];
         extern Initial::Type None;
+        extern Initial::Type FromConsonant[31];
     }
 
     namespace Vowel {
@@ -97,8 +97,8 @@ namespace hangeul {
             P = 26,
             H = 27,
         };
-        extern Final::Type FromConsonant[31];
         extern Final::Type None;
+        extern Final::Type FromConsonant[31];
     }
 
     namespace Consonant {
@@ -135,6 +135,8 @@ namespace hangeul {
             H = 30,
         };
         extern Consonant::Type None;
+        extern Consonant::Type FromInitial[20];
+        extern Consonant::Type FromFinal[28];
     }
 }
 

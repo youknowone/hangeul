@@ -23,6 +23,8 @@ namespace hangeul {
         virtual UnicodeVector commited(State& state);
         virtual UnicodeVector composed(State& state);
     };
+
+    UnicodeVector nfc_to_nfd(UnicodeVector& string);
 }
 
 #endif

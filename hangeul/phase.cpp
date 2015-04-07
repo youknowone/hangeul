@@ -7,6 +7,7 @@
 //
 
 #include <hangeul/phase.h>
+#include <chrono>
 #include "_debug.h"
 
 namespace hangeul {
@@ -70,6 +71,13 @@ namespace hangeul {
         auto strokes = state.array(STROKES_IDX);
         auto stroke = state.latestKeyStroke();
         strokes.push_back(stroke);
+
+        auto timestack = state.array(TIME_IDX);
+        auto clock = std::chrono::system_clock::now();
+        auto milliclock = std::chrono::duration_cast<std::chrono::milliseconds>(clock.time_since_epoch());
+        timestack.push_back((int32_t)milliclock.count());
+        assert(strokes.size() == timestack.size());
+
         dassert(strokes.back() == stroke);
         return PhaseResult::Make(state, true);
     }
@@ -79,11 +87,14 @@ namespace hangeul {
         if (strokes.size() == 0) {
             return PhaseResult::Make(state, true); // do not need to unstroke anything
         }
+        auto timestack = state.array(TIME_IDX);
         auto stroke = strokes.back();
         if (stroke == 0x0e) {
             strokes.pop_back();
+            timestack.pop_back();
             if (strokes.size() > 0) {
                 strokes.pop_back();
+                timestack.pop_back();
             } else {
                 return PhaseResult::Make(state, false);
             }
@@ -168,16 +179,20 @@ namespace hangeul {
 
     PhaseResult CombinatorPhase::put(State& state) {
         auto strokes = state.array(STROKES_IDX);
+        auto timestack = state.array(TIME_IDX);
         auto string = state.array(STRING_IDX);
         string.erase(0, string.size());
         assert(string.size() == 0);
+
         State substate;
         auto substrokes = substate.array(STROKES_IDX);
+        auto subtimestack = substate.array(TIME_IDX);
         int boundary = 0;
         auto result = PhaseResult::Stop();
         for (int i = 0; i < strokes.size(); i++) {
             auto stroke = strokes[i];
             substrokes.push_back(stroke);
+            subtimestack.push_back(timestack[i]);
             substate[0] = stroke;
             result = phase->put(substate);
             substate = result.state;

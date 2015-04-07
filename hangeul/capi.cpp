@@ -35,6 +35,10 @@ Unicode unicodevector_get(UnicodeVector *unicodes, size_t index) {
     return (*((hangeul::UnicodeVector *)unicodes))[index];
 }
 
+void unicodevector_append(UnicodeVector *unicodes, Unicode unicode) {
+    ((hangeul::UnicodeVector *)unicodes)->push_back(unicode);
+}
+
 ALLOCFUNCS(PhaseResult, phaseresult)
 GETPFUNC(PhaseResult, phaseresult, State, state)
 GETVFUNC(PhaseResult, phaseresult, bool, processed)
@@ -73,6 +77,17 @@ void context_get_commited(Context *context, UnicodeVector *buffer) {
 
 void context_get_composed(Context *context, UnicodeVector *buffer) {
     *(hangeul::UnicodeVector *)buffer = ((hangeul::Context *)context)->composed();
+}
+
+void nfc_to_nfd(UnicodeVector *nfc_src, UnicodeVector *nfd_dest) {
+    auto nfc = (hangeul::UnicodeVector *)nfc_src;
+    auto raw_nfd = hangeul::nfc_to_nfd(*nfc);
+
+    auto nfd = (hangeul::UnicodeVector *)nfd_dest;
+    nfd->clear();
+    for (auto& c: raw_nfd) {
+        nfd->push_back(c);
+    }
 }
 
 Phase *bypass_phase() {

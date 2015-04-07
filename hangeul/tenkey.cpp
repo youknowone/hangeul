@@ -63,11 +63,13 @@ namespace TableTenkey {
         if (strokes.size() < 2) {
             return PhaseResult::Make(state, true); // do not need to merge strokes
         }
+        auto timestack = state.array(TIME_IDX);
         auto s1 = Tenkey::Stroke(strokes[-1]);
         auto s2 = Tenkey::Stroke(strokes[-2]);
         auto annotation = (*_table)[0][s1.code];
         if (annotation.type == Tenkey::Annotation::Function && s1 == s2) {
             strokes.pop_back();
+            timestack.pop_back();
         }
         else if (s1.phase == 0 && s1.code == s2.code) {
             auto sn = s2;
@@ -82,6 +84,10 @@ namespace TableTenkey {
                 strokes.pop_back();
                 strokes.pop_back();
                 strokes.push_back(sn.value);
+                auto last = timestack.back();
+                timestack.pop_back();
+                timestack.pop_back();
+                timestack.push_back(last);
             }
         }
         return PhaseResult::Make(state, true);
@@ -92,18 +98,22 @@ namespace TableTenkey {
         if (strokes.size() == 0) {
             return PhaseResult::Make(state, true); // do not need to unstroke anything
         }
+        auto timestack = state.array(TIME_IDX);
         auto stroke = strokes.back();
         if (stroke == 0x0e) {
             strokes.pop_back();
+            timestack.pop_back();
             stroke = strokes.back();
             auto annotation = (*_table)[0][stroke & 0xff];
             while (strokes.size() > 0 && annotation.type == Tenkey::Annotation::Function) {
                 strokes.pop_back();
+                timestack.pop_back();
                 stroke = strokes.back();
                 annotation = (*_table)[0][stroke & 0xff];
             }
             if (strokes.size() > 0) {
                 strokes.pop_back();
+                timestack.pop_back();
             } else {
                 return PhaseResult::Make(state, false);
             }
@@ -111,6 +121,7 @@ namespace TableTenkey {
         auto annotation = (*_table)[0][stroke & 0xff];
         if (strokes.size() == 1 && annotation.type == Tenkey::Annotation::Function) {
             strokes.pop_back();
+            timestack.pop_back();
             stroke = strokes.back();
             annotation = (*_table)[0][stroke & 0xff];
         }

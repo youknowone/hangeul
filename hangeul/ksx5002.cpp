@@ -65,8 +65,9 @@ namespace hangeul {
                 if (unicodes.size() > 0) {
                     unicodes.pop_back();
                 }
+                auto to_idx = string.size() - 1;
                 if (string.size() > 0) {
-                    string.erase(0, string.size() - 1);
+                    string.erase(0, to_idx);
                 }
             }
             return unicodes;
@@ -367,10 +368,31 @@ namespace hangeul {
             return PhaseResult::Make(state, true);
         }
 
+        PhaseResult MergeConsonantPhase::put(State& state) {
+            auto strokes = state.array(STROKES_IDX);
+            if (strokes.size() <= 1) {
+                return PhaseResult::Make(state, true); // do not need to merge anything
+            }
+            auto timestack = state.array(TIME_IDX);
+            auto stroke = strokes.back();
+            if (stroke == 0x0e) {
+                strokes.pop_back();
+                timestack.pop_back();
+                if (strokes.size() > 0) {
+                    strokes.pop_back();
+                    timestack.pop_back();
+                } else {
+                    return PhaseResult::Make(state, false);
+                }
+            }
+            return PhaseResult::Make(state, true);
+        }
+
         FromQwertyHandler::FromQwertyHandler(hangeul::Combinator *combinator) : CombinedPhase() {
             this->phases.push_back((Phase *)new QwertyToKeyStrokePhase());
             this->phases.push_back((Phase *)new KeyStrokeStackPhase());
             this->phases.push_back((Phase *)new UnstrokeBackspacePhase());
+            this->phases.push_back((Phase *)new MergeConsonantPhase());
             this->phases.push_back((Phase *)new CombinatorPhase((Phase *)combinator, false));
         }
 

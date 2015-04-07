@@ -165,6 +165,14 @@ namespace Danmoum {
         static std::string OutputType() { assert(false); return "annotation-ksx5002"; }
     };
 
+    class MergeConsonantPhase: public Phase {
+    public:
+        virtual PhaseResult put(State& state);
+
+        static std::string InputType() { assert(false); return "annotation-ksx5002"; }
+        static std::string OutputType() { assert(false); return "annotation-ksx5002"; }
+    };
+
     class FromQwertyHandler: public CombinedPhase {
     public:
         static std::string InputType() { assert(false); return "inputsource-qwerty"; }

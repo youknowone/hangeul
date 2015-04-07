@@ -17,6 +17,7 @@
 #include <hangeul/type.h>
 
 #define STROKES_IDX 0x10000
+#define TIME_IDX 0x15000
 #define STRING_IDX 0x20000
 
 namespace hangeul {

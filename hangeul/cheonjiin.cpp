@@ -85,7 +85,8 @@ namespace Cheonjiin {
                 unicodes.pop_back();
             }
             if (string.size() > 0) {
-                string.erase(0, string.size() - 1);
+                auto to_idx = string.size() - 1;
+                string.erase(0, to_idx);
             }
         }
         return unicodes;
