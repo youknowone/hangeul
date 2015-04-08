@@ -288,16 +288,19 @@ namespace hangeul {
                 assert(strokes.size() == timestack.size());
                 auto s2 = strokes[-2];
                 bool decomposed = false;
-                if (this->_interval < 0 || timestack[-1] - timestack[-2] > this->_interval) {
-                    for (auto& rule: FinalCompositionRules) {
-                        if (c == rule[2] && rule[1] == s2) {
-                            c2[3] = rule[0];
-                            c1[1] = rule[1];
-                            decomposed = true;
-                            break;
+
+                for (auto& rule: FinalCompositionRules) {
+                    if (c == rule[2] && rule[1] == s2) {
+                        if (rule[0] == rule[1] && (timestack[-1] - timestack[-2] < this->_interval)) {
+                            continue;
                         }
+                        c2[3] = rule[0];
+                        c1[1] = rule[1];
+                        decomposed = true;
+                        break;
                     }
                 }
+
                 if (!decomposed) {
                     c1[1] = c;
                     c2[3] = 0;
