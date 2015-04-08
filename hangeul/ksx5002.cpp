@@ -15,8 +15,11 @@ namespace hangeul {
         State Decoder::combined(State& state) {
             auto rstate = State();
             auto strokes = state.array(STROKES_IDX);
-            for (auto& stroke: strokes) {
-                rstate[0] = stroke;
+            auto timestack = state.array(TIME_IDX);
+            assert(strokes.size() == timestack.size());
+            for (auto i = 0; i < strokes.size(); i++) {
+                rstate[0] = strokes[i];
+                rstate[-'t'] = timestack[i];
                 auto result = this->combinator->put(rstate);
                 rstate = result.state;
                 if (!result.processed) {
@@ -150,9 +153,12 @@ namespace hangeul {
             auto annotation = layout.translate(state);
             auto characters = state.array(0x1000);
             auto strokes = state.array(0x2000);
+            auto timestack = state.array(0x3000);
 
             characters.push_back(annotation.type);
             strokes.push_back(annotation.data);
+            timestack.push_back(state.latestKeyStrokeTime());
+            assert(strokes.size() == timestack.size());
             auto character = state.array(0x1000 + characters.size() * 0x10);
 
             character[1] = 0;
@@ -278,14 +284,18 @@ namespace hangeul {
             auto c = c2[3];
             if (c1[2] && !c1[1] && c) {
                 auto strokes = state.array(0x2000);
+                auto timestack = state.array(0x3000);
+                assert(strokes.size() == timestack.size());
                 auto s2 = strokes[-2];
                 bool decomposed = false;
-                for (auto& rule: FinalCompositionRules) {
-                    if (c == rule[2] && rule[1] == s2) {
-                        c2[3] = rule[0];
-                        c1[1] = rule[1];
-                        decomposed = true;
-                        break;
+                if (this->_interval < 0 || timestack[-1] - timestack[-2] > this->_interval) {
+                    for (auto& rule: FinalCompositionRules) {
+                        if (c == rule[2] && rule[1] == s2) {
+                            c2[3] = rule[0];
+                            c1[1] = rule[1];
+                            decomposed = true;
+                            break;
+                        }
                     }
                 }
                 if (!decomposed) {
@@ -368,31 +378,10 @@ namespace hangeul {
             return PhaseResult::Make(state, true);
         }
 
-        PhaseResult MergeConsonantPhase::put(State& state) {
-            auto strokes = state.array(STROKES_IDX);
-            if (strokes.size() <= 1) {
-                return PhaseResult::Make(state, true); // do not need to merge anything
-            }
-            auto timestack = state.array(TIME_IDX);
-            auto stroke = strokes.back();
-            if (stroke == 0x0e) {
-                strokes.pop_back();
-                timestack.pop_back();
-                if (strokes.size() > 0) {
-                    strokes.pop_back();
-                    timestack.pop_back();
-                } else {
-                    return PhaseResult::Make(state, false);
-                }
-            }
-            return PhaseResult::Make(state, true);
-        }
-
         FromQwertyHandler::FromQwertyHandler(hangeul::Combinator *combinator) : CombinedPhase() {
             this->phases.push_back((Phase *)new QwertyToKeyStrokePhase());
             this->phases.push_back((Phase *)new KeyStrokeStackPhase());
             this->phases.push_back((Phase *)new UnstrokeBackspacePhase());
-            this->phases.push_back((Phase *)new MergeConsonantPhase());
             this->phases.push_back((Phase *)new CombinatorPhase((Phase *)combinator, false));
         }
 
@@ -402,7 +391,7 @@ namespace hangeul {
             auto hangul_phase = new CombinedPhase();
             hangul_phase->phases.push_back((Phase *)new JasoCompositionPhase());
             hangul_phase->phases.push_back((Phase *)new KSX5002::AnnotationToCombinationPhase());
-            hangul_phase->phases.push_back((Phase *)new KSX5002::ConsonantDecompositionPhase());
+            hangul_phase->phases.push_back((Phase *)new KSX5002::ConsonantDecompositionPhase(200));
 
             auto success_phase = new SuccessPhase(hangul_phase);
             this->phases.push_back(success_phase);

@@ -9,10 +9,14 @@
 #include <hangeul/context.h>
 #include <cdebug/debug.h>
 #include <cstdio>
+#include <chrono>
 
 namespace hangeul {
 
     bool Context::put(InputSource input) {
+        auto clock = std::chrono::system_clock::now();
+        auto milliclock = std::chrono::duration_cast<std::chrono::milliseconds>(clock.time_since_epoch());
+        this->_state[-'t'] = (int32_t)milliclock.count();
         this->_state[-1] = input;
         this->_state[0] = input;
         auto res = this->_handler->put(this->_state);

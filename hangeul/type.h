@@ -107,6 +107,9 @@ namespace hangeul {
         KeyStroke latestKeyStroke() {
             return (*this)[0];
         }
+        uint32_t latestKeyStrokeTime() {
+            return (*this)[-'t'];
+        }
         #if DEBUG
         void _debug() {
             printf("-- debug info --\n");

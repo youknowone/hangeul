@@ -73,9 +73,8 @@ namespace hangeul {
         strokes.push_back(stroke);
 
         auto timestack = state.array(TIME_IDX);
-        auto clock = std::chrono::system_clock::now();
-        auto milliclock = std::chrono::duration_cast<std::chrono::milliseconds>(clock.time_since_epoch());
-        timestack.push_back((int32_t)milliclock.count());
+        timestack.push_back(state.latestKeyStrokeTime());
+
         assert(strokes.size() == timestack.size());
 
         dassert(strokes.back() == stroke);
@@ -194,6 +193,7 @@ namespace hangeul {
             substrokes.push_back(stroke);
             subtimestack.push_back(timestack[i]);
             substate[0] = stroke;
+            substate[-'t'] = timestack[i];
             result = phase->put(substate);
             substate = result.state;
             if (!result.processed) {
