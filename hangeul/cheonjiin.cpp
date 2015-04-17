@@ -15,8 +15,11 @@ namespace Cheonjiin {
     State Decoder::combined(State& state) {
         auto rstate = State();
         auto strokes = state.array(STROKES_IDX);
-        for (auto& stroke: strokes) {
-            rstate[0] = stroke;
+        auto timestack = state.array(TIME_IDX);
+        assert(strokes.size() == timestack.size());
+        for (auto i = 0; i < strokes.size(); i++) {
+            rstate[0] = strokes[i];
+            rstate[-'t'] = timestack[i];
             auto result = this->combinator->put(rstate);
             rstate = result.state;
             if (!result.processed) {
@@ -136,9 +139,12 @@ namespace Cheonjiin {
         auto annotation = layout.translate(state);
         auto characters = state.array(0x1000);
         auto strokes = state.array(0x2000);
+        auto timestack = state.array(0x3000);
 
         characters.push_back(annotation.type);
         strokes.push_back(annotation.data);
+        timestack.push_back(state.latestKeyStrokeTime());
+        assert(strokes.size() == timestack.size());
         auto character = state.array(0x1000 + characters.size() * 0x10);
 
         character[1] = 0;
@@ -268,6 +274,8 @@ namespace Cheonjiin {
         auto c = c2[3];
         if (c1[2] && !c1[1] && c) {
             auto strokes = state.array(0x2000);
+            auto timestack = state.array(0x3000);
+            assert(strokes.size() == timestack.size());
             auto s2 = strokes[-2];
             bool decomposed = false;
             for (auto& rule: FinalCompositionRules) {
@@ -291,7 +299,7 @@ namespace Cheonjiin {
         this->phases.push_back((Phase *)new KeyStrokeStackPhase());
         TableTenkey::Table *table = (TableTenkey::Table *)&CheonjiinMap;
         this->phases.push_back((Phase *)new TableTenkey::UnstrokeBackspacePhase(table));
-        this->phases.push_back((Phase *)new TableTenkey::MergeStrokesPhase(table));
+        this->phases.push_back((Phase *)new TableTenkey::MergeStrokesPhase(table, 200));
         this->phases.push_back((Phase *)new CombinatorPhase((Phase *)combinator, false));
     }
 

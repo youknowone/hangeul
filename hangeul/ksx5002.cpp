@@ -291,7 +291,7 @@ namespace hangeul {
 
                 for (auto& rule: FinalCompositionRules) {
                     if (c == rule[2] && rule[1] == s2) {
-                        if (rule[0] == rule[1] && (timestack[-1] - timestack[-2] < this->_interval)) {
+                        if (rule[0] == rule[1] && (timestack.size() >= 3 && timestack[-2] - timestack[-3] < this->_interval)) {
                             continue;
                         }
                         c2[3] = rule[0];

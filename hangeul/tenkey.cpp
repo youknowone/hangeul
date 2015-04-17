@@ -49,6 +49,8 @@ namespace Tenkey {
     PhaseResult AnnotationPhase::put(State& state) {
         auto characters = state.array(0x1000);
         characters.push_back(state.latestKeyStroke());
+        auto timestack = state.array(0x3000);
+        timestack.push_back(state.latestKeyStrokeTime());
 
         auto res = PhaseResult::Make(state, true);
         return res;
@@ -75,7 +77,6 @@ namespace TableTenkey {
             auto sn = s2;
             sn.phase += 1;
             auto sn_annotation = (*_table)[sn.phase][sn.code];
-
             if (sn_annotation == Tenkey::Annotation::None) {
                 sn.phase = 0;
                 sn_annotation = (*_table)[sn.phase][sn.code];
@@ -131,7 +132,7 @@ namespace TableTenkey {
     FromTenkeyHandler::FromTenkeyHandler(Table *table) : CombinedPhase() {
         this->phases.push_back((Phase *)new KeyStrokeStackPhase());
         this->phases.push_back((Phase *)new UnstrokeBackspacePhase(table));
-        this->phases.push_back((Phase *)new MergeStrokesPhase(table));
+        this->phases.push_back((Phase *)new MergeStrokesPhase(table, 200));
     }
 
     Table AlphabetMap = {

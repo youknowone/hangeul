@@ -109,8 +109,9 @@ namespace TableTenkey {
 
     class MergeStrokesPhase: public Phase {
         Table *_table;
+        uint32_t _interval_ms;
     public:
-        MergeStrokesPhase(Table *table): _table(table) {}
+        MergeStrokesPhase(Table *table, uint32_t interval_ms): _table(table), _interval_ms(interval_ms) {}
 
         virtual PhaseResult put(State& state);
 
