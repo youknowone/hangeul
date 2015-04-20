@@ -161,11 +161,25 @@ namespace Danmoum {
     };
 
     class JasoCompositionPhase: public Phase {
+    protected:
+        int32_t _interval;
     public:
+        JasoCompositionPhase(int32_t interval=-1) : _interval(interval) { }
         virtual PhaseResult put(State& state);
 
         static std::string InputType() { assert(false); return "annotation-ksx5002"; }
         static std::string OutputType() { assert(false); return "annotation-ksx5002"; }
+    };
+
+    class ConsonantDecompositionPhase: public Phase {
+    protected:
+        int32_t _interval;
+    public:
+        ConsonantDecompositionPhase(int32_t interval=-1) : _interval(interval) { }
+        virtual PhaseResult put(State& state);
+
+        static std::string InputType() { assert(false); return "combination-ksx5002"; }
+        static std::string OutputType() { assert(false); return "combination-ksx5002"; }
     };
 
     class FromQwertyHandler: public CombinedPhase {

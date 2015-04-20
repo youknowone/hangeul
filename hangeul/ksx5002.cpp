@@ -159,7 +159,7 @@ namespace hangeul {
             strokes.push_back(annotation.data);
             timestack.push_back(state.latestKeyStrokeTime());
             assert(strokes.size() == timestack.size());
-            auto character = state.array(0x1000 + characters.size() * 0x10);
+            auto character = state.array(0x1000 + characters.ssize() * 0x10);
 
             character[1] = 0;
             character[2] = 0;
@@ -193,8 +193,8 @@ namespace hangeul {
                 return PhaseResult::Make(state, true);
             }
 
-            auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
-            auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+            auto c1 = state.array(0x1000 + (characters.ssize() - 0) * 0x10);
+            auto c2 = state.array(0x1000 + (characters.ssize() - 1) * 0x10);
 
             bool combined = false;
             if (c1[1] && c2[3]) {
@@ -233,7 +233,7 @@ namespace hangeul {
 
         PhaseResult AnnotationToCombinationPhase::put(State& state) {
             auto characters = state.array(0x1000);
-            auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
+            auto c1 = state.array(0x1000 + (characters.ssize() - 0) * 0x10);
             if (!c1[1] && !c1[2] && !c1[3]) {
                 return PhaseResult::Make(state, true);
             }
@@ -242,12 +242,12 @@ namespace hangeul {
                 return PhaseResult::Make(state, false);
             }
 
-            auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+            auto c2 = state.array(0x1000 + (characters.ssize() - 1) * 0x10);
             if (c1[1] && c1[2]) {
 
             }
             else if (c1[1]) {
-                if (c2[1] && c2[2] && !c2[3]) {
+                if (c2[1] && c2[2] && !c2[3] && Final::FromConsonant[c1[1]] != Final::None) {
                     c2[3] = c1[1];
                     characters.pop_back();
                     return PhaseResult::Make(state, true);
@@ -278,8 +278,8 @@ namespace hangeul {
                 return PhaseResult::Make(state, true);
             }
 
-            auto c1 = state.array(0x1000 + (strokes.size() - 0) * 0x10);
-            auto c2 = state.array(0x1000 + (strokes.size() - 1) * 0x10);
+            auto c1 = state.array(0x1000 + (strokes.ssize() - 0) * 0x10);
+            auto c2 = state.array(0x1000 + (strokes.ssize() - 1) * 0x10);
 
             auto c = c2[3];
             if (c1[2] && !c1[1] && c) {
@@ -287,13 +287,9 @@ namespace hangeul {
                 auto timestack = state.array(0x3000);
                 assert(strokes.size() == timestack.size());
                 auto s2 = strokes[-2];
-                bool decomposed = false;
-
+                auto decomposed = false;
                 for (auto& rule: FinalCompositionRules) {
                     if (c == rule[2] && rule[1] == s2) {
-                        if (rule[0] == rule[1] && (timestack.size() >= 3 && timestack[-2] - timestack[-3] < this->_interval)) {
-                            continue;
-                        }
                         c2[3] = rule[0];
                         c1[1] = rule[1];
                         decomposed = true;
@@ -343,8 +339,8 @@ namespace hangeul {
                 return PhaseResult::Make(state, true);
             }
 
-            auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
-            auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+            auto c1 = state.array(0x1000 + ((int32_t)characters.size() - 0) * 0x10);
+            auto c2 = state.array(0x1000 + ((int32_t)characters.size() - 1) * 0x10);
 
             bool combined = false;
             if (c1[1] && c2[3]) {
@@ -354,6 +350,14 @@ namespace hangeul {
                 if (!composed.is_none) {
                     c2[3] = composed.some;
                     combined = true;
+                } else {
+                    auto timestack = state.array(0x3000);
+                    auto timecond = timestack.size() >= 2 && timestack[-1] - timestack[-2] < this->_interval;
+                    composed = search_rule(KSX5002::InitialCompositionRules, j1, j2);
+                    if (timecond && !composed.is_none) {
+                        c2[3] = 0;
+                        c1[1] = composed.some;
+                    }
                 }
             }
             else if (!c2[3] && c1[2] && c2[2]) {
@@ -376,6 +380,43 @@ namespace hangeul {
             }
             if (combined) {
                 characters.pop_back();
+            }
+            return PhaseResult::Make(state, true);
+        }
+
+        PhaseResult ConsonantDecompositionPhase::put(State& state) {
+            auto strokes = state.array(0x1000);
+            if (strokes.size() < 2) {
+                return PhaseResult::Make(state, true);
+            }
+
+            auto c1 = state.array(0x1000 + ((int32_t)strokes.size() - 0) * 0x10);
+            auto c2 = state.array(0x1000 + ((int32_t)strokes.size() - 1) * 0x10);
+
+            auto c = c2[3];
+            if (c1[2] && !c1[1] && c) {
+                auto strokes = state.array(0x2000);
+                auto timestack = state.array(0x3000);
+                assert(strokes.size() == timestack.size());
+                auto s2 = strokes[-2];
+                auto decomposed = false;
+                auto timecond = timestack.size() >= 3 && timestack[-2] - timestack[-3] < this->_interval;
+                for (auto& rule: KSX5002::FinalCompositionRules) {
+                    if (c == rule[2] && rule[1] == s2) {
+                        if (rule[0] == rule[1] && timecond) {
+                            break;
+                        }
+                        c2[3] = rule[0];
+                        c1[1] = rule[1];
+                        decomposed = true;
+                        break;
+                    }
+                }
+
+                if (!decomposed) {
+                    c1[1] = c;
+                    c2[3] = 0;
+                }
                 return PhaseResult::Make(state, true);
             }
             return PhaseResult::Make(state, true);
@@ -392,9 +433,9 @@ namespace hangeul {
             this->phases.push_back((Phase *)new KSX5002::AnnotationPhase());
 
             auto hangul_phase = new CombinedPhase();
-            hangul_phase->phases.push_back((Phase *)new JasoCompositionPhase());
+            hangul_phase->phases.push_back((Phase *)new JasoCompositionPhase(250));
             hangul_phase->phases.push_back((Phase *)new KSX5002::AnnotationToCombinationPhase());
-            hangul_phase->phases.push_back((Phase *)new KSX5002::ConsonantDecompositionPhase(200));
+            hangul_phase->phases.push_back((Phase *)new ConsonantDecompositionPhase(250));
 
             auto success_phase = new SuccessPhase(hangul_phase);
             this->phases.push_back(success_phase);

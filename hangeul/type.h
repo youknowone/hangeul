@@ -55,6 +55,9 @@ namespace hangeul {
                 auto size = (*this->owner)[this->head - 1];
                 return size;
             }
+            int32_t ssize() {
+                return (int32_t)size();
+            }
             int32_t& operator[](ssize_t subscript) {
                 if (subscript >= 0) {
                     return (*this->owner)[(int32_t)(this->head + subscript)];
@@ -66,7 +69,7 @@ namespace hangeul {
                 return Iterator(this, 0);
             }
             Iterator end() {
-                return Iterator(this, this->size());
+                return Iterator(this, this->ssize());
             }
             int32_t& back() {
                 auto size = this->size();
@@ -85,8 +88,8 @@ namespace hangeul {
             }
             void erase(uint32_t from_idx, size_t length = 1) { // very expensive
                 auto size = this->size();
-                for (uint32_t i = from_idx + length; i < size; i++) {
-                    (*this->owner)[i - length] = (*this->owner)[i];
+                for (int32_t i = (int32_t)(from_idx + length); i < size; i++) {
+                    (*this->owner)[(int32_t)(i - length)] = (*this->owner)[i];
                 }
                 this->set_size(size - length);
             }
@@ -114,7 +117,7 @@ namespace hangeul {
         void _debug() {
             printf("-- debug info --\n");
             for (auto& it: *this) {
-                printf("%lx(%ld): %lx(%ld)\n", it.first, it.first, it.second, it.second);
+                printf("%x(%d): %x(%d)\n", it.first, it.first, it.second, it.second);
             }
             printf("-- end of info --\n");
         }

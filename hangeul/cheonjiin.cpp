@@ -145,7 +145,7 @@ namespace Cheonjiin {
         strokes.push_back(annotation.data);
         timestack.push_back(state.latestKeyStrokeTime());
         assert(strokes.size() == timestack.size());
-        auto character = state.array(0x1000 + characters.size() * 0x10);
+        auto character = state.array(0x1000 + characters.ssize() * 0x10);
 
         character[1] = 0;
         character[2] = 0;
@@ -179,8 +179,8 @@ namespace Cheonjiin {
             return PhaseResult::Make(state, true);
         }
 
-        auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
-        auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+        auto c1 = state.array(0x1000 + (characters.ssize() - 0) * 0x10);
+        auto c2 = state.array(0x1000 + (characters.ssize() - 1) * 0x10);
 
         if (c1[11]) {
             return PhaseResult::Make(state, false);
@@ -223,7 +223,7 @@ namespace Cheonjiin {
 
     PhaseResult AnnotationToCombinationPhase::put(State& state) {
         auto characters = state.array(0x1000);
-        auto c1 = state.array(0x1000 + (characters.size() - 0) * 0x10);
+        auto c1 = state.array(0x1000 + (characters.ssize() - 0) * 0x10);
         if (!c1[1] && !c1[2] && !c1[3]) {
             return PhaseResult::Make(state, true);
         }
@@ -232,7 +232,7 @@ namespace Cheonjiin {
             return PhaseResult::Make(state, false);
         }
 
-        auto c2 = state.array(0x1000 + (characters.size() - 1) * 0x10);
+        auto c2 = state.array(0x1000 + (characters.ssize() - 1) * 0x10);
         if (c1[1] && c1[2]) {
 
         }
@@ -268,8 +268,8 @@ namespace Cheonjiin {
             return PhaseResult::Make(state, true);
         }
 
-        auto c1 = state.array(0x1000 + (strokes.size() - 0) * 0x10);
-        auto c2 = state.array(0x1000 + (strokes.size() - 1) * 0x10);
+        auto c1 = state.array(0x1000 + (strokes.ssize() - 0) * 0x10);
+        auto c2 = state.array(0x1000 + (strokes.ssize() - 1) * 0x10);
 
         auto c = c2[3];
         if (c1[2] && !c1[1] && c) {

@@ -198,7 +198,7 @@ namespace hangeul {
             substate = result.state;
             if (!result.processed) {
                 string.push_back(boundary);
-                auto charstrokes = state.array(STRING_IDX + string.size() * 0x100);
+                auto charstrokes = state.array(STRING_IDX + string.ssize() * 0x100);
                 charstrokes.import(substrokes);
                 boundary += substrokes.size();
                 substate = State();
@@ -207,7 +207,7 @@ namespace hangeul {
         }
         if (string.back() != boundary) {
             string.push_back(boundary);
-            auto charstrokes = state.array(STRING_IDX + string.size() * 0x100);
+            auto charstrokes = state.array(STRING_IDX + string.ssize() * 0x100);
             charstrokes.import(substrokes);
         }
         return result;
