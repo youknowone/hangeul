@@ -353,10 +353,16 @@ namespace hangeul {
                 } else {
                     auto timestack = state.array(0x3000);
                     auto timecond = timestack.size() >= 2 && timestack[-1] - timestack[-2] < this->_interval;
-                    composed = search_rule(KSX5002::InitialCompositionRules, j1, j2);
-                    if (timecond && !composed.is_none) {
-                        c2[3] = 0;
-                        c1[1] = composed.some;
+                    if (timecond) {
+                        auto combination = search_rule(KSX5002::FinalCompositionRules, j1);
+                        if (!combination.is_none) {
+                            j1 = combination.some[1];
+                        }
+                        composed = search_rule(KSX5002::InitialCompositionRules, j1, j2);
+                        if (!composed.is_none) {
+                            c2[3] = combination.is_none ? 0 : combination.some[0];
+                            c1[1] = composed.some;
+                        }
                     }
                 }
             }
