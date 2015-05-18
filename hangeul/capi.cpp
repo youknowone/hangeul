@@ -204,7 +204,7 @@ Phase *number_from_tenkey_handler() {
     static hangeul::Tenkey::Decoder *decoder = nullptr;
     if (obj == nullptr) {
         decoder = new hangeul::TableTenkey::Decoder(&hangeul::TableTenkey::NumberMap);
-        obj = new hangeul::TableTenkey::FromTenkeyHandler(&hangeul::TableTenkey::AlphabetMap);
+        obj = new hangeul::TableTenkey::FromTenkeyHandler(&hangeul::TableTenkey::NumberMap);
     }
     return obj;
 }

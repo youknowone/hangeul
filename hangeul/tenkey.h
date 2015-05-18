@@ -51,7 +51,7 @@ namespace Tenkey {
     class Decoder: public hangeul::Decoder {
     public:
         virtual State combined(State& state) = 0;
-        virtual Unicode decode(int stroke) = 0;
+        virtual Annotation decode(int stroke) = 0;
         virtual UnicodeVector commited(State& state);
         virtual UnicodeVector composed(State& state);
     };
@@ -93,17 +93,19 @@ namespace TableTenkey {
             auto strokes = state.array(STROKES_IDX);
             auto string = rstate.array(STRING_IDX);
             for (auto& stroke: strokes) {
-                auto character = this->decode(stroke);
-                string.push_back(character);
+                auto annotation = this->decode(stroke);
+                if (annotation.type == Tenkey::Annotation::Symbol) {
+                    string.push_back(annotation.data);
+                }
             }
             return rstate;
         }
-        virtual Unicode decode(int stroke) {
+        virtual Tenkey::Annotation decode(int stroke) {
             auto level = stroke >> 8;
             auto position = stroke & 0xff;
             auto annotation = (*this->_table)[level][position];
-            assert(annotation.type == Tenkey::Annotation::Symbol);
-            return annotation.data;
+            //assert(annotation.type == Tenkey::Annotation::Symbol);
+            return annotation;
         }
     };
 
