@@ -11,6 +11,8 @@
 
 #if __cplusplus
 extern "C" {
+#else
+#define bool int
 #endif
 
 #include <stdint.h>
