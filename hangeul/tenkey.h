@@ -29,7 +29,7 @@ namespace Tenkey {
         uint32_t data;
 
         bool operator==(Annotation& rhs) { return this->type == rhs.type && this->data == rhs.data; }
-        bool operator!=(Annotation& rhs) { return !operator!=(rhs); }
+        bool operator!=(Annotation& rhs) { return !operator==(rhs); }
 
         static Annotation None;
     };
